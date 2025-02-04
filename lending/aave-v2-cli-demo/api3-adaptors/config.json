@@ -1,0 +1,30 @@
+{
+  "assets": [
+    {
+      "assetName": "Wrapped Bitcoin",
+      "assetSymbol": "WBTC",
+      "pairName": "WBTC/USDC",
+      "proxyAddress": "0x73AB44615772a0d31dB48A87d7F4F81a3601BceB"
+    },
+    {
+      "assetName": "Mock API3",
+      "assetSymbol": "API3",
+      "pairName": "API3/USDC",
+      "proxyAddress": "0x97A076AB5C96FA28E6Cc4929AdBF1e75D6A9cb72"
+    }
+  ],
+  "EthUsdProxyAddress": "0xa47Fd122b11CdD7aad7c3e8B740FB91D83Ce43D1",
+  "UsdcUsdProxyAddress": "0xa790a882bB695D0286C391C0935a05c347290bdB",
+  "network": {
+    "chainId": 421614,
+    "name": "Arbitrum Sepolia",
+    "rpc": "YOUR PRIVATE RPC", 
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "wrapped": "WETH",
+      "decimals": 18
+    },
+    "explorerLink": "https://sepolia.arbiscan.io"
+  }
+}
