@@ -4,27 +4,27 @@
       "assetName": "Wrapped Bitcoin",
       "assetSymbol": "WBTC",
       "pairName": "WBTC/USDC",
-      "proxyAddress": "0x73AB44615772a0d31dB48A87d7F4F81a3601BceB"
+      "proxyAddress": "0x041a131Fa91Ad61dD85262A42c04975986580d50"
     },
     {
       "assetName": "Mock API3",
       "assetSymbol": "API3",
       "pairName": "API3/USDC",
-      "proxyAddress": "0x97A076AB5C96FA28E6Cc4929AdBF1e75D6A9cb72"
+      "proxyAddress": "0x5FfDA4aC655366dB00e87ab198eDe36e70229E1e"
     }
   ],
-  "EthUsdProxyAddress": "0xa47Fd122b11CdD7aad7c3e8B740FB91D83Ce43D1",
-  "UsdcUsdProxyAddress": "0xa790a882bB695D0286C391C0935a05c347290bdB",
+  "EthUsdProxyAddress": "0x5b0cf2b36a65a6BB085D501B971e4c102B9Cd473",
+  "UsdcUsdProxyAddress": "0xD3C586Eec1C6C3eC41D276a23944dea080eDCf7f",
   "network": {
-    "chainId": 421614,
-    "name": "Arbitrum Sepolia",
-    "rpc": "YOUR PRIVATE RPC", 
+    "chainId": 57054,
+    "name": "Blaze Testnet Sonic",
+    "rpc": "https://rpc.blaze.soniclabs.com", 
     "nativeCurrency": {
-      "name": "Ether",
-      "symbol": "ETH",
+      "name": "Sonic",
+      "symbol": "S",
       "wrapped": "WETH",
       "decimals": 18
     },
-    "explorerLink": "https://sepolia.arbiscan.io"
+    "explorerLink": "https://testnet.sonicscan.org/"
   }
 }
