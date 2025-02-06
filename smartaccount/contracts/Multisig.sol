@@ -4,22 +4,22 @@ pragma solidity ^0.8.26;
 contract MultiSigWallet {
     event Deposit(address indexed sender, uint256 amount, uint256 balance);
     event SubmitTransaction(
-        address indexed owner,
+        address indexed signer,
         uint256 indexed txIndex,
         address indexed to,
         uint256 value,
         bytes data
     );
-    event ConfirmTransaction(address indexed owner, uint256 indexed txIndex);
-    event RevokeConfirmation(address indexed owner, uint256 indexed txIndex);
-    event ExecuteTransaction(address indexed owner, uint256 indexed txIndex);
+    event ConfirmTransaction(address indexed signer, uint256 indexed txIndex);
+    event RevokeConfirmation(address indexed signer, uint256 indexed txIndex);
+    event ExecuteTransaction(address indexed signer, uint256 indexed txIndex);
     event DelegationCreated(
-        address indexed owner,
+        address indexed signer,
         address indexed delegate,
         uint256 dailyLimit,
         uint256 timestamp
     );
-    event DelegationRevoked(address indexed owner, address indexed delegate);
+    event DelegationRevoked(address indexed signer, address indexed delegate);
     event DelegatedTransfer(
         address indexed delegate,
         address indexed to,
@@ -27,8 +27,8 @@ contract MultiSigWallet {
         uint256 timestamp
     );
 
-    address[] public owners;
-    mapping(address => bool) public isOwner;
+    address[] public signers;
+    mapping(address => bool) public isSigner;
     uint256 public numConfirmationsRequired;
 
     struct Transaction {
@@ -48,23 +48,23 @@ contract MultiSigWallet {
         uint256 numConfirmations;
     }
 
-    // mapping from tx index => owner => bool
+    // mapping from tx index => signer => bool
     mapping(uint256 => mapping(address => bool)) public isConfirmed;
     // delegate address => Delegation
     mapping(address => Delegation) public delegations;
-    // delegate => owner => bool for delegation confirmations
+    // delegate => signer => bool for delegation confirmations
     mapping(address => mapping(address => bool)) public delegationConfirmations;
 
     Transaction[] public transactions;
 
-    modifier onlyOwner() {
-        require(isOwner[msg.sender], "not owner");
+    modifier onlySigner() {
+        require(isSigner[msg.sender], "not authorized signer");
         _;
     }
 
-    modifier onlyDelegateOrOwner() {
+    modifier onlyDelegateOrSigner() {
         require(
-            isOwner[msg.sender] || (delegations[msg.sender].isActive && delegations[msg.sender].delegate == msg.sender),
+            isSigner[msg.sender] || (delegations[msg.sender].isActive && delegations[msg.sender].delegate == msg.sender),
             "not authorized"
         );
         _;
@@ -85,22 +85,22 @@ contract MultiSigWallet {
         _;
     }
 
-    constructor(address[] memory _owners, uint256 _numConfirmationsRequired) {
-        require(_owners.length > 0, "owners required");
+    constructor(address[] memory _signers, uint256 _numConfirmationsRequired) {
+        require(_signers.length > 0, "signers required");
         require(
             _numConfirmationsRequired > 0 &&
-                _numConfirmationsRequired <= _owners.length,
+                _numConfirmationsRequired <= _signers.length,
             "invalid number of required confirmations"
         );
 
-        for (uint256 i = 0; i < _owners.length; i++) {
-            address owner = _owners[i];
+        for (uint256 i = 0; i < _signers.length; i++) {
+            address signer = _signers[i];
 
-            require(owner != address(0), "invalid owner");
-            require(!isOwner[owner], "owner not unique");
+            require(signer != address(0), "invalid signer");
+            require(!isSigner[signer], "signer not unique");
 
-            isOwner[owner] = true;
-            owners.push(owner);
+            isSigner[signer] = true;
+            signers.push(signer);
         }
 
         numConfirmationsRequired = _numConfirmationsRequired;
@@ -114,7 +114,7 @@ contract MultiSigWallet {
         address _to,
         uint256 _value,
         bytes memory _data
-    ) public {
+    ) public onlySigner {
         uint256 txIndex = transactions.length;
 
         transactions.push(
@@ -127,12 +127,15 @@ contract MultiSigWallet {
             })
         );
 
+        // Auto-confirm from submitter
+        confirmTransaction(txIndex);
+
         emit SubmitTransaction(msg.sender, txIndex, _to, _value, _data);
     }
 
     function confirmTransaction(uint256 _txIndex)
         public
-        onlyOwner
+        onlySigner
         txExists(_txIndex)
         notExecuted(_txIndex)
         notConfirmed(_txIndex)
@@ -146,7 +149,7 @@ contract MultiSigWallet {
 
     function executeTransaction(uint256 _txIndex)
         public
-        onlyOwner
+        onlySigner
         txExists(_txIndex)
         notExecuted(_txIndex)
     {
@@ -169,7 +172,7 @@ contract MultiSigWallet {
 
     function revokeConfirmation(uint256 _txIndex)
         public
-        onlyOwner
+        onlySigner
         txExists(_txIndex)
         notExecuted(_txIndex)
     {
@@ -185,7 +188,7 @@ contract MultiSigWallet {
 
     function submitDelegation(address _delegate, uint256 _dailyLimit)
         public
-        onlyOwner
+        onlySigner
     {
         require(_delegate != address(0), "invalid delegate address");
         require(_dailyLimit > 0, "invalid daily limit");
@@ -218,7 +221,7 @@ contract MultiSigWallet {
 
     function confirmDelegation(address _delegate) 
         public 
-        onlyOwner 
+        onlySigner 
     {
         Delegation storage delegation = delegations[_delegate];
         require(!delegation.isActive, "delegation already active");
@@ -235,13 +238,13 @@ contract MultiSigWallet {
         emit ConfirmTransaction(msg.sender, uint256(uint160(_delegate)));
     }
 
-    function revokeDelegation(address _delegate) public onlyOwner {
+    function revokeDelegation(address _delegate) public onlySigner {
         require(delegations[_delegate].isActive, "not active delegation");
         
         // Clear delegation and confirmations
         delete delegations[_delegate];
-        for (uint i = 0; i < owners.length; i++) {
-            delete delegationConfirmations[_delegate][owners[i]];
+        for (uint i = 0; i < signers.length; i++) {
+            delete delegationConfirmations[_delegate][signers[i]];
         }
 
         emit DelegationRevoked(msg.sender, _delegate);
@@ -318,8 +321,8 @@ contract MultiSigWallet {
         return true;
     }
 
-    function getOwners() public view returns (address[] memory) {
-        return owners;
+    function getSigners() public view returns (address[] memory) {
+        return signers;
     }
 
     function getTransactionCount() public view returns (uint256) {
