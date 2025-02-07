@@ -39,7 +39,7 @@ USER node
 FROM node:23.3.0-slim
 
 # Install runtime dependencies if needed
-RUN npm install -g pnpm@9.15.1
+RUN npm install -g pnpm@10.2.1
 RUN apt-get update && \
     apt-get install -y git python3 && \
     apt-get clean && \
