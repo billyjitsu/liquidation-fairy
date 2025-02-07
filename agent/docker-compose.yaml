@@ -1,13 +1,13 @@
 services:
     eliza:
-        command: ["yarn", "start"]
+        command: ["pnpm", "start"]
         build:
             context: .
             dockerfile: Dockerfile
         stdin_open: true
         tty: true
         volumes:
-            - ./data:/app/data 
+            - ./data:/app/data
         ports:
             - "3000:3000"
         restart: always
