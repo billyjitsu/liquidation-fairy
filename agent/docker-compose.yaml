@@ -1,6 +1,6 @@
 services:
     eliza:
-        command: ["pnpm", "start"]
+        command: ["yarn", "start"]
         build:
             context: .
             dockerfile: Dockerfile
