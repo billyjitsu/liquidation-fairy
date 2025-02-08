@@ -6,7 +6,10 @@
     "deploy:custom": "npx hardhat run scripts/deploy.js --network custom",
     "delegate": "npx hardhat run scripts/setDelegation.js",
     "transferToMultisig": "npx hardhat run scripts/transferTokensToMultisig.js",
-    "aiWithdraw": "npx hardhat run scripts/withdrawFromMultisig.js"
+    "aiWithdraw": "npx hardhat run scripts/withdrawFromMultisig.js",
+    "deposit": "npx hardhat run scripts/deposit.js",
+    "multisigDeposit": "npx hardhat run scripts/multisigDeposit.js",
+    "borrow": "npx hardhat run scripts/borrow.js"
   },
   "main": "index.js",
   "license": "MIT",
