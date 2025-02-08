@@ -1,6 +1,13 @@
 {
   "name": "smartaccount",
   "version": "1.0.0",
+  "scripts": {
+    "deploy": "npx hardhat run deploy/deploy.js --network sonic_testnet",
+    "deploy:custom": "npx hardhat run scripts/deploy.js --network custom",
+    "delegate": "npx hardhat run scripts/setDelegation.js",
+    "transferToMultisig": "npx hardhat run scripts/transferTokensToMultisig.js",
+    "aiWithdraw": "npx hardhat run scripts/withdrawFromMultisig.js"
+  },
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {

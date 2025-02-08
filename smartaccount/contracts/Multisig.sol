@@ -253,10 +253,10 @@ contract MultiSigWallet {
     {
         TokenDelegation storage delegation = delegations[_token][_delegate];
         require(!delegation.isActive, "delegation already active");
-        require(
-            !delegationConfirmations[_token][_delegate][msg.sender],
-            "already confirmed"
-        );
+        // require(
+        //     !delegationConfirmations[_token][_delegate][msg.sender],
+        //     "already confirmed"
+        // );
         
         delegationConfirmations[_token][_delegate][msg.sender] = true;
         delegation.numConfirmations += 1;
