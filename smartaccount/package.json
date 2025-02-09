@@ -9,7 +9,10 @@
     "aiWithdraw": "npx hardhat run scripts/withdrawFromMultisig.js",
     "deposit": "npx hardhat run scripts/deposit.js",
     "multisigDeposit": "npx hardhat run scripts/multisigDeposit.js",
-    "borrow": "npx hardhat run scripts/borrow.js"
+    "borrow": "npx hardhat run scripts/borrow.js",
+    "multisigBorrow": "npx hardhat run scripts/multisigBorrow.js",
+    "repayOnBehalf": "npx hardhat run scripts/repayOnBehalf.js",
+    "monitorHealth": "npx hardhat run scripts/monitorHealth.js"
   },
   "main": "index.js",
   "license": "MIT",
