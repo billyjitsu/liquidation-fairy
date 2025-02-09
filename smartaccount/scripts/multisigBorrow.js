@@ -106,20 +106,52 @@ async function borrowViaMultisig() {
 
         // Get user's account data
         const accountData = await lendingPool.getUserAccountData(process.env.DEPLOYED_MULTISIG);
+
+        // Get user's debt data directly from Protocol Data Provider
+        const debtData = await protocolDataProvider.getUserReserveData(
+            process.env.DEBT_TOKEN,
+            process.env.DEPLOYED_MULTISIG
+        );
         
-        // Calculate total debt in USD
-        const totalDebtETH = Number(ethers.formatEther(accountData.totalDebtETH));
-        const ethPriceNumber = Number(ethers.formatUnits(ethPrice, 8));
-        const totalDebtUSD = totalDebtETH * ethPriceNumber;
-        console.log('Total Debt USD:', totalDebtUSD.toFixed(2));
+        const debtDecimals = await debtToken.decimals();
+        const totalVariableDebt = Number(ethers.formatUnits(debtData.currentVariableDebt, debtDecimals));
+        const totalStableDebt = Number(ethers.formatUnits(debtData.currentStableDebt, debtDecimals));
+        const totalDebtUSD = totalVariableDebt + totalStableDebt; // USDC debt is already in USD
 
         // Calculate LTV percentage
         const ltvPercentage = Number(accountData.ltv) / 100;
         console.log('LTV:', `${ltvPercentage}%`);
 
-        // Calculate available borrows
-        const availableBorrowsUSD = totalCollateralUSD * (ltvPercentage / 100) - totalDebtUSD;
+        console.log(`Current Variable Debt: ${totalVariableDebt.toFixed(2)} USDC`);
+        console.log(`Current Stable Debt: ${totalStableDebt.toFixed(2)} USDC`);
+        console.log('Total Debt USD:', totalDebtUSD.toFixed(2));
+
+        // Calculate max allowed debt and available borrows
+        const maxAllowedDebtUSD = totalCollateralUSD * (ltvPercentage / 100);
+        const availableBorrowsUSD = maxAllowedDebtUSD - totalDebtUSD;
+        
+        console.log('Max Allowed Debt USD:', maxAllowedDebtUSD.toFixed(2));
+        console.log('Current Debt USD:', totalDebtUSD.toFixed(2));
         console.log('Available Borrows USD:', availableBorrowsUSD.toFixed(2));
+        
+        // Check if there's any meaningful amount available to borrow (using a small threshold)
+        const MINIMUM_BORROW_THRESHOLD = 0.1; // $0.1 minimum to consider borrowing
+        if (availableBorrowsUSD <= MINIMUM_BORROW_THRESHOLD) {
+            console.log('\nCANNOT BORROW: Maximum borrowing capacity reached or insufficient capacity');
+            console.log(`Current Debt: $${totalDebtUSD.toFixed(2)}`);
+            console.log(`Maximum Allowed: $${maxAllowedDebtUSD.toFixed(2)}`);
+            console.log(`Available to Borrow: $${availableBorrowsUSD.toFixed(2)}`);
+            console.log(`Current Utilization: ${((totalDebtUSD / maxAllowedDebtUSD) * 100).toFixed(2)}%`);
+            process.exit(0); // Exit immediately
+        }
+
+        // Check if we can borrow a meaningful amount
+        if (availableBorrowsUSD < 1) {
+            console.log('\nCANNOT BORROW: Available amount too small');
+            console.log(`Minimum borrow amount: $1.00`);
+            console.log(`Available to Borrow: $${availableBorrowsUSD.toFixed(2)}`);
+            process.exit(0); // Exit immediately
+        }
 
         // Get debt token price
         const debtTokenPrice = await getAssetPrice(aaveOracle, process.env.DEBT_TOKEN);
