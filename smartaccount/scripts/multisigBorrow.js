@@ -13,8 +13,7 @@ const LENDING_POOL_ABI = [
 ];
 
 const AAVE_ORACLE_ABI = [
-    'function getAssetPrice(address asset) external view returns (uint256)',
-    'function getSourceOfAsset(address asset) external view returns (address)'
+    'function getAssetPrice(address asset) external view returns (uint256)'
 ];
 
 const PROTOCOL_DATA_PROVIDER_ABI = [
@@ -51,6 +50,12 @@ async function borrowViaMultisig() {
             wallet
         );
 
+        const collateralToken = new ethers.Contract(
+            process.env.COLLATERAL_TOKEN,
+            ERC20_ABI,
+            wallet
+        );
+
         const lendingPool = new ethers.Contract(
             process.env.LENDING_POOL_ADDRESS,
             LENDING_POOL_ABI,
@@ -73,26 +78,60 @@ async function borrowViaMultisig() {
         const referralCode = 0;
         const VARIABLE_RATE_MODE = 2;
 
-        // Calculate borrow amount using the same logic as before
+        // Get ETH and collateral prices
         const ethPrice = await getAssetPrice(aaveOracle, process.env.WETH_TOKEN_ADDRESS);
         console.log('ETH Price (in USD):', ethers.formatUnits(ethPrice, 8));
 
-        // Get user's account data (for the MultiSig)
-        const accountData = await lendingPool.getUserAccountData(process.env.DEPLOYED_MULTISIG);
-        console.log('MultiSig Available Borrows (ETH):', ethers.formatEther(accountData.availableBorrowsETH));
+        const collateralPrice = await getAssetPrice(aaveOracle, process.env.COLLATERAL_TOKEN);
+        console.log('Collateral Price (in USD):', ethers.formatUnits(collateralPrice, 8));
+
+        // Get deposited collateral balance
+        const userReserveData = await protocolDataProvider.getUserReserveData(
+            process.env.COLLATERAL_TOKEN,
+            process.env.DEPLOYED_MULTISIG
+        );
+        const depositedCollateralBalance = userReserveData.currentATokenBalance;
+        const collateralDecimals = await collateralToken.decimals();
+        console.log('Deposited Collateral Balance:', ethers.formatUnits(depositedCollateralBalance, collateralDecimals));
+
+        // Calculate collateral value in USD using BigInt operations
+        const depositedBalanceBigInt = BigInt(depositedCollateralBalance.toString());
+        const collateralPriceBigInt = BigInt(collateralPrice.toString());
+        const decimalsBigInt = 10n ** BigInt(collateralDecimals.toString());
         
+        // Calculate USD value: (balance * price) / (10 ** decimals)
+        const collateralValueInUsd = (depositedBalanceBigInt * collateralPriceBigInt) / decimalsBigInt;
+        const totalCollateralUSD = Number(ethers.formatUnits(collateralValueInUsd, 8));
+        console.log('Total Collateral USD:', totalCollateralUSD.toFixed(2));
+
+        // Get user's account data
+        const accountData = await lendingPool.getUserAccountData(process.env.DEPLOYED_MULTISIG);
+        
+        // Calculate total debt in USD
+        const totalDebtETH = Number(ethers.formatEther(accountData.totalDebtETH));
+        const ethPriceNumber = Number(ethers.formatUnits(ethPrice, 8));
+        const totalDebtUSD = totalDebtETH * ethPriceNumber;
+        console.log('Total Debt USD:', totalDebtUSD.toFixed(2));
+
+        // Calculate LTV percentage
+        const ltvPercentage = Number(accountData.ltv) / 100;
+        console.log('LTV:', `${ltvPercentage}%`);
+
+        // Calculate available borrows
+        const availableBorrowsUSD = totalCollateralUSD * (ltvPercentage / 100) - totalDebtUSD;
+        console.log('Available Borrows USD:', availableBorrowsUSD.toFixed(2));
+
         // Get debt token price
         const debtTokenPrice = await getAssetPrice(aaveOracle, process.env.DEBT_TOKEN);
         console.log('Debt Token Price (in USD):', ethers.formatUnits(debtTokenPrice, 8));
 
-        // Calculate borrow amount in USDC
-        const availableBorrowsETH = Number(ethers.formatEther(accountData.availableBorrowsETH));
-        const ethPriceNumber = Number(ethers.formatUnits(ethPrice, 8));
-        const availableBorrowsUSD = availableBorrowsETH * ethPriceNumber;
+        // Calculate maximum borrow amount
+        const maxBorrowUSDC = availableBorrowsUSD;
+        console.log('Maximum Borrowable (USDC):', maxBorrowUSDC.toFixed(6));
 
-        // Set borrow amount to 80% of maximum
+        // Set borrow amount to desired percentage of maximum
         const borrowPercentage = 100;
-        const borrowAmount = Math.floor(availableBorrowsUSD * borrowPercentage / 100);
+        const borrowAmount = Math.floor(maxBorrowUSDC * borrowPercentage / 100);
         console.log('Attempting to borrow:', borrowAmount.toFixed(6), 'USDC');
 
         if (borrowAmount <= 0) {
@@ -104,7 +143,7 @@ async function borrowViaMultisig() {
         const borrowAmountWei = ethers.parseUnits(borrowAmount.toFixed(6), 6);
         console.log('Borrow Amount (Wei):', borrowAmountWei.toString());
 
-        // Step 1: Submit borrow transaction to MultiSig
+        // Submit borrow transaction to MultiSig
         console.log('Submitting borrow transaction to MultiSig...');
         const borrowData = lendingPool.interface.encodeFunctionData(
             'borrow',
@@ -113,7 +152,7 @@ async function borrowViaMultisig() {
                 borrowAmountWei,
                 VARIABLE_RATE_MODE,
                 referralCode,
-                process.env.DEPLOYED_MULTISIG // onBehalfOf is the MultiSig
+                process.env.DEPLOYED_MULTISIG
             ]
         );
 
