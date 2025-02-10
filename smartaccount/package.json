@@ -16,7 +16,8 @@
     "depositOnBehalf": "npx hardhat run scripts/depositOnBehalf.js",
     "delegateBorrow": "npx hardhat run scripts/delegateBorrow.js",
     "borrowOnBehalf": "npx hardhat run scripts/borrowOnBehalf.js",
-    "monitorHealth": "npx hardhat run scripts/monitorHealth.js"
+    "monitorHealth": "npx hardhat run scripts/monitorHealth.js",
+    "swap": "npx hardhat run scripts/swap.js"
   },
   "main": "index.js",
   "license": "MIT",
