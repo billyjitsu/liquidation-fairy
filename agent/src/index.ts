@@ -25,7 +25,6 @@ import {
 import { initializeDatabase } from "./database/index.ts";
 import watchPosition from "./evaluators/watch-position.ts";
 import unwatchPosition from "./evaluators/unwatch-position.ts";
-import test from "./evaluators/test.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,7 +55,7 @@ export function createAgent(
     databaseAdapter: db,
     token,
     modelProvider: character.modelProvider,
-    evaluators: [watchPosition, unwatchPosition, test],
+    evaluators: [watchPosition, unwatchPosition],
     character,
     plugins: [
       bootstrapPlugin,
