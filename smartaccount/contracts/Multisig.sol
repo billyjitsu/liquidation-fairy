@@ -39,6 +39,10 @@ contract MultiSigWallet {
         uint256 amount,
         uint256 timestamp
     );
+    event SignerAdditionProposed(address indexed proposer, address indexed newSigner);
+    event SignerAdditionConfirmed(address indexed confirmer, address indexed newSigner);
+    event SignerAdded(address indexed newSigner);
+    event SignerRemoved(address indexed signer);
 
     address[] public signers;
     mapping(address => bool) public isSigner;
@@ -62,14 +66,17 @@ contract MultiSigWallet {
         uint256 numConfirmations;
     }
 
-    // Stores delegations: token => delegate => TokenDelegation
+    struct ProposedSigner {
+        address signerAddress;
+        uint256 numConfirmations;
+        bool isActive;
+        mapping(address => bool) hasConfirmed;
+    }
+
     mapping(address => mapping(address => TokenDelegation)) public delegations;
-    
-    // Stores delegation confirmations: token => delegate => signer => bool
     mapping(address => mapping(address => mapping(address => bool))) public delegationConfirmations;
-    
-    // Stores transaction confirmations: txIndex => signer => bool
     mapping(uint256 => mapping(address => bool)) public isConfirmed;
+    mapping(address => ProposedSigner) public proposedSigners;
 
     Transaction[] public transactions;
 
@@ -99,6 +106,11 @@ contract MultiSigWallet {
 
     modifier notConfirmed(uint256 _txIndex) {
         require(!isConfirmed[_txIndex][msg.sender], "tx already confirmed");
+        _;
+    }
+
+    modifier notSigner(address _address) {
+        require(!isSigner[_address], "address is already a signer");
         _;
     }
 
@@ -139,7 +151,7 @@ contract MultiSigWallet {
                 value: _value,
                 data: _data,
                 executed: false,
-                numConfirmations: 1  // Auto-confirmed by submitter
+                numConfirmations: 1
             })
         );
 
@@ -232,7 +244,7 @@ contract MultiSigWallet {
             spentToday: 0,
             lastResetTime: block.timestamp,
             isActive: false,
-            numConfirmations: 1  // Auto-confirmed by submitter
+            numConfirmations: 1
         });
 
         delegations[_token][_delegate] = newDelegation;
@@ -253,10 +265,6 @@ contract MultiSigWallet {
     {
         TokenDelegation storage delegation = delegations[_token][_delegate];
         require(!delegation.isActive, "delegation already active");
-        // require(
-        //     !delegationConfirmations[_token][_delegate][msg.sender],
-        //     "already confirmed"
-        // );
         
         delegationConfirmations[_token][_delegate][msg.sender] = true;
         delegation.numConfirmations += 1;
@@ -289,7 +297,6 @@ contract MultiSigWallet {
 
         TokenDelegation storage delegation = delegations[_token][msg.sender];
         
-        // Check if 24 hours have passed and reset if needed
         uint256 timeSinceReset = block.timestamp - delegation.lastResetTime;
         if (timeSinceReset >= 24 hours) {
             delegation.spentToday = 0;
@@ -300,12 +307,10 @@ contract MultiSigWallet {
         
         delegation.spentToday += _amount;
 
-        // Handle native token (ETH) transfers
         if (_token == address(0)) {
             (bool success, ) = _to.call{value: _amount}("");
             require(success, "ETH transfer failed");
         } else {
-            // Handle ERC20 transfers
             require(
                 IERC20(_token).transfer(_to, _amount),
                 "token transfer failed"
@@ -314,6 +319,85 @@ contract MultiSigWallet {
 
         emit DelegatedTransfer(msg.sender, _token, _to, _amount, block.timestamp);
         return true;
+    }
+
+    function proposeNewSigner(address _newSigner) 
+        public 
+        onlySigner 
+        notSigner(_newSigner) 
+    {
+        require(_newSigner != address(0), "invalid signer address");
+        require(!proposedSigners[_newSigner].isActive, "signer already proposed");
+
+        ProposedSigner storage proposal = proposedSigners[_newSigner];
+        proposal.signerAddress = _newSigner;
+        proposal.numConfirmations = 1;
+        proposal.isActive = true;
+        proposal.hasConfirmed[msg.sender] = true;
+
+        emit SignerAdditionProposed(msg.sender, _newSigner);
+    }
+
+    function confirmNewSigner(address _newSigner) 
+        public 
+        onlySigner 
+        notSigner(_newSigner) 
+    {
+        ProposedSigner storage proposal = proposedSigners[_newSigner];
+        require(proposal.isActive, "signer not proposed");
+        require(!proposal.hasConfirmed[msg.sender], "already confirmed");
+
+        proposal.hasConfirmed[msg.sender] = true;
+        proposal.numConfirmations += 1;
+
+        emit SignerAdditionConfirmed(msg.sender, _newSigner);
+
+        if (proposal.numConfirmations >= numConfirmationsRequired) {
+            addSigner(_newSigner);
+        }
+    }
+
+    function addSigner(address _newSigner) internal {
+        signers.push(_newSigner);
+        isSigner[_newSigner] = true;
+        delete proposedSigners[_newSigner];
+
+        emit SignerAdded(_newSigner);
+    }
+
+    function removeSigner(address _signer) 
+        public 
+        onlySigner 
+    {
+        require(isSigner[_signer], "not a signer");
+        require(
+            signers.length - 1 >= numConfirmationsRequired,
+            "cannot have fewer signers than required confirmations"
+        );
+
+        isSigner[_signer] = false;
+        
+        for (uint i = 0; i < signers.length; i++) {
+            if (signers[i] == _signer) {
+                signers[i] = signers[signers.length - 1];
+                signers.pop();
+                break;
+            }
+        }
+
+        emit SignerRemoved(_signer);
+    }
+
+    function updateRequiredConfirmations(uint256 _newRequired) 
+        public 
+        onlySigner 
+    {
+        require(_newRequired > 0, "invalid number of required confirmations");
+        require(
+            _newRequired <= signers.length,
+            "required confirmations cannot exceed number of signers"
+        );
+        numConfirmationsRequired = _newRequired;
     }
 
     function getDelegationStatus(

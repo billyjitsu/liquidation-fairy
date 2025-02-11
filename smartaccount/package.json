@@ -4,6 +4,7 @@
   "scripts": {
     "deploy": "npx hardhat run deploy/deploy.js --network sonic_testnet",
     "deploy:custom": "npx hardhat run scripts/deploy.js --network custom",
+    "generateWallet": "npx hardhat run scripts/generateWallet.js",
     "delegate": "npx hardhat run scripts/setDelegation.js",
     "transferToMultisig": "npx hardhat run scripts/transferTokensToMultisig.js",
     "aiWithdraw": "npx hardhat run scripts/withdrawFromMultisig.js",
