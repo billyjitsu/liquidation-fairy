@@ -1,4 +1,19 @@
 import { ethers } from "ethers";
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load env from parent directory
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
+// Debug env loading
+console.log("Environment variables loaded:", {
+    RPC_URL: process.env.RPC_URL,
+    AI_AGENT_PRIVATE_KEY: process.env.AI_AGENT_PRIVATE_KEY?.substring(0,6) + "..."
+});
 
 const MULTISIG_ABI = [
     "function delegatedTransfer(address _token, address _to, uint256 _amount) public returns (bool)",
@@ -58,12 +73,14 @@ export class Web3Service {
     async generateNewWallet(): Promise<{
         walletAddress: string;
         privateKey: string;
+        mnemonic: string;
     }> {
         const wallet = ethers.Wallet.createRandom();
 
         return {
             walletAddress: wallet.address,
-            privateKey: wallet.mnemonic?.phrase,
+            privateKey: wallet.privateKey,
+            mnemonic: wallet.mnemonic.phrase
         };
     }
 
@@ -82,7 +99,8 @@ export class Web3Service {
         debtTokenAddress: string
     ): Promise<void> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-        const wallet = ethers.Wallet.fromPhrase(privateKey, provider);
+        // Fix: Use Wallet constructor instead of fromPhrase
+        const wallet = new ethers.Wallet(privateKey, provider);
         const multisig = new ethers.Contract(multisigAddress, MULTISIG_ABI, wallet);
         const collateralToken = new ethers.Contract(
             collateralTokenAddress,
@@ -147,10 +165,11 @@ export class Web3Service {
                     18
                 )} Collateral Token...`
             );
+            const collateral_testing_amount = ethers.parseUnits("10", 18);
             const tx1 = await multisig.delegatedTransfer(
                 collateralTokenAddress,
                 wallet.address,
-                collateralAmount,
+                collateral_testing_amount,  // instead of collateralAmount, using 10 tokens
                 { gasLimit: 300000 }
             );
             await tx1.wait();
@@ -161,10 +180,11 @@ export class Web3Service {
             console.log(
                 `Withdrawing ${ethers.formatUnits(debtAmount, 6)} Debt Token...`
             );
+            const debt_testing_amount = ethers.parseUnits("10", 6);
             const tx2 = await multisig.delegatedTransfer(
                 debtTokenAddress,
                 wallet.address,
-                debtAmount,
+                debt_testing_amount,  // removed debt amount and added debt_testing_amount
                 { gasLimit: 300000 }
             );
             await tx2.wait();

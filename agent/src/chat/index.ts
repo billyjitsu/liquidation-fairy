@@ -2,7 +2,7 @@ import { settings } from "@elizaos/core";
 import readline from "readline";
 
 const rl = readline.createInterface({
-  input: process.stdin,
+  input: process.stdin as unknown as NodeJS.ReadableStream,
   output: process.stdout,
 });
 
