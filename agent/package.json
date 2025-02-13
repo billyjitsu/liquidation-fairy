@@ -27,6 +27,7 @@
     "@tavily/core": "0.0.2",
     "amqplib": "0.10.5",
     "better-sqlite3": "11.5.0",
+    "ethers": "^6.13.5",
     "fs": "0.0.1-security",
     "groq-sdk": "^0.15.0",
     "net": "1.0.2",

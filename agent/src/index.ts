@@ -25,6 +25,7 @@ import {
 import { initializeDatabase } from "./database/index.ts";
 import watchPosition from "./evaluators/watch-position.ts";
 import unwatchPosition from "./evaluators/unwatch-position.ts";
+import { generateWallet } from "./actions/generate-wallet.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,7 +64,7 @@ export function createAgent(
       character.settings?.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
     ].filter(Boolean),
     providers: [],
-    actions: [],
+    actions: [generateWallet],
     services: [],
     managers: [],
     cacheManager: cache,

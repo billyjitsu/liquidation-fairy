@@ -59,6 +59,9 @@ importers:
       better-sqlite3:
         specifier: 11.5.0
         version: 11.5.0
+      ethers:
+        specifier: ^6.13.5
+        version: 6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       fs:
         specifier: 0.0.1-security
         version: 0.0.1-security
@@ -14979,7 +14982,7 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 18.19.75
+      '@types/node': 22.13.1
       form-data: 4.0.1
 
   '@types/node@10.17.60': {}
@@ -17061,7 +17064,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
