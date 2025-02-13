@@ -23,6 +23,8 @@ import {
   parseArguments,
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
+import watchPosition from "./evaluators/watch-position.ts";
+import unwatchPosition from "./evaluators/unwatch-position.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,7 +55,7 @@ export function createAgent(
     databaseAdapter: db,
     token,
     modelProvider: character.modelProvider,
-    evaluators: [],
+    evaluators: [watchPosition, unwatchPosition],
     character,
     plugins: [
       bootstrapPlugin,
@@ -165,7 +167,7 @@ const startAgents = async () => {
   }
 
   const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
-  if(!isDaemonProcess) {
+  if (!isDaemonProcess) {
     elizaLogger.log("Chat started. Type 'exit' to quit.");
     const chat = startChat(characters);
     chat();
