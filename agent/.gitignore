@@ -1,4 +1,3 @@
-*.ts
 dist
 !index.ts
 !character.ts
