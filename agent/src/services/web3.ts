@@ -680,14 +680,14 @@ export class Web3Service {
 
   /**
    * Repays a loan on behalf of another borrower using the AI agent's wallet
-   * @param borrowerPrivateKey - The private key of the original borrower whose loan will be repaid
+   * @param originalBorrower - address of the original borrower whose loan will be repaid
    * @param privateKey - The private key of the AI agent wallet that will execute the repayment
    * @param debtTokenAddress - The address of the debt token contract (USDC)
    * @param lendingPoolAddress - The address of the Aave lending pool contract
    * @throws Error if repayment fails or if unable to check account data
    */
   async repayOnBehalf(
-    borrowerPrivateKey: string,
+    originalBorrower: string,
     privateKey: string,
     debtTokenAddress: string,
     lendingPoolAddress: string
@@ -695,12 +695,12 @@ export class Web3Service {
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 
     // Setup the original borrower's wallet (for checking their debt)
-    const borrowerWallet = new ethers.Wallet(borrowerPrivateKey, provider);
+    const borrowerWallet = originalBorrower;
 
     // Setup AI wallet that will pay the debt
     const aiWallet = new ethers.Wallet(privateKey, provider);
 
-    console.log("Original Borrower Address:", borrowerWallet.address);
+    console.log("Original Borrower Address:", borrowerWallet);
     console.log("AI Wallet Address (paying the debt):", aiWallet.address);
 
     // Contract instances connected to AI wallet since it's doing the repayment
@@ -716,7 +716,7 @@ export class Web3Service {
       aiWallet
     );
 
-    const amount = ethers.parseUnits("300", 6); // USDC has 6 decimals
+    const amount = ethers.parseUnits("100", 6); // USDC has 6 decimals
     const VARIABLE_RATE_MODE = 2; // 2 for variable rate
 
     // Check AI wallet's token balance before repayment
@@ -728,7 +728,7 @@ export class Web3Service {
 
     // Check borrower's debt before repayment
     const borrowerAccountData = await lendingPool.getUserAccountData(
-      borrowerWallet.address
+      borrowerWallet
     );
     console.log(
       "Borrower Debt Before (ETH):",
@@ -748,7 +748,7 @@ export class Web3Service {
       debtTokenAddress,
       amount,
       VARIABLE_RATE_MODE,
-      borrowerWallet.address, // repaying on behalf of the original borrower
+      borrowerWallet, // repaying on behalf of the original borrower
       {
         gasLimit: BigInt(500000),
       }
@@ -765,7 +765,7 @@ export class Web3Service {
     );
 
     // Check borrower's final debt
-    await this.checkAccountData(lendingPool, borrowerWallet.address);
+    await this.checkAccountData(lendingPool, borrowerWallet);
   }
 
   /**
