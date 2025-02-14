@@ -25,10 +25,12 @@ import {
 import { initializeDatabase } from "./database/index.ts";
 import watchPosition from "./evaluators/watch-position.ts";
 import unwatchPosition from "./evaluators/unwatch-position.ts";
-import { generateWallet } from "./actions/generate-wallet.ts";
 import cron from "node-cron";
 import web3Service from "./services/web3.ts";
-import { transferDelegatedTokens } from "./actions/deposit-on-behalf.ts";
+import { generateWallet } from "./actions/generate-wallet.ts";
+import { transferDelegatedTokens } from "./actions/transfer-delegated-tokens.ts";
+import { borrowOnBehalf } from "./actions/borrow-on-behalf.ts";
+import { depositOnBehalf } from "./actions/deposit-on-behalf.ts";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -98,7 +100,7 @@ export function createAgent(
       character.settings?.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
     ].filter(Boolean),
     providers: [],
-    actions: [generateWallet, transferDelegatedTokens],
+    actions: [generateWallet, transferDelegatedTokens, depositOnBehalf, borrowOnBehalf],
     services: [],
     managers: [],
     cacheManager: cache,
