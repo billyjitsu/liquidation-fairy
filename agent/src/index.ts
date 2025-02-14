@@ -26,6 +26,8 @@ import { initializeDatabase } from "./database/index.ts";
 import watchPosition from "./evaluators/watch-position.ts";
 import unwatchPosition from "./evaluators/unwatch-position.ts";
 import { generateWallet } from "./actions/generate-wallet.ts";
+import cron from "node-cron";
+import web3Service from "./services/web3.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +37,36 @@ export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
     Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
   return new Promise((resolve) => setTimeout(resolve, waitTime));
 };
+
+// health factor checks
+const WARNING_THRESHOLD = 1.5;
+const CRITICAL_THRESHOLD = 1.1;
+
+let activeAgentId: string | null = null;
+
+async function sendHealthAlert(directClient: DirectClient, message: string) {
+  if (!activeAgentId) {
+    elizaLogger.error("No active agent ID found. Cannot send message.");
+    return;
+  }
+
+  try {
+    await directClient.app.post(
+      `/${activeAgentId}/message`,
+      async (req, res) => {
+        const response = await this.handleMessage(req.body);
+        res.json(response);
+      }
+    );
+
+    console.log(
+      `Message sent via DirectClient to agent ${activeAgentId}:`,
+      message
+    );
+  } catch (error) {
+    elizaLogger.error("Error sending health alert:", error);
+  }
+}
 
 let nodePlugin: any | undefined;
 
@@ -47,7 +79,7 @@ export function createAgent(
   elizaLogger.success(
     elizaLogger.successesTitle,
     "Creating runtime for character",
-    character.name,
+    character.name
   );
 
   nodePlugin ??= createNodePlugin();
@@ -95,6 +127,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
     runtime.clients = await initializeClients(character, runtime);
 
     directClient.registerAgent(runtime);
+    activeAgentId = runtime.agentId;
 
     // report to console
     elizaLogger.debug(`Started ${character.name} as ${runtime.agentId}`);
@@ -103,7 +136,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
-      error,
+      error
     );
     console.error(error);
     throw error;
@@ -173,6 +206,42 @@ const startAgents = async () => {
     const chat = startChat(characters);
     chat();
   }
+
+  cron.schedule("*/30 * * * * *", async () => {
+    try {
+      elizaLogger.log("Checking health factor...");
+      const healthFactor = await web3Service.getHealthFactor(
+        process.env.LENDING_POOL_ADDRESS,
+        process.env.DEPLOYED_MULTISIG
+      );
+      const healthFactorFixed = healthFactor.toFixed(2);
+
+      console.log("Health factor:", healthFactorFixed);
+      const now = Date.now();
+
+      if (healthFactor < CRITICAL_THRESHOLD) {
+        const message = `🚨 CRITICAL ALERT: Your health factor is ${healthFactorFixed}! Immediate action required to avoid liquidation.`;
+        if (message) {
+          await sendHealthAlert(directClient, message);
+        }
+
+        console.log("\x1b[31m[CRITICAL]\x1b[0m");
+      } else if (healthFactor < WARNING_THRESHOLD) {
+        const message = `⚠️ WARNING: Your health factor is ${healthFactorFixed}. Consider adding collateral or reducing debt.`;
+
+        console.log(directClient, "client");
+        if (message) {
+          await sendHealthAlert(directClient, message);
+        }
+
+        console.log("\x1b[33m[WARNING]\x1b[0m");
+      } else {
+        console.log("\x1b[32m[HEALTHY]\x1b[0m");
+      }
+    } catch (error) {
+      elizaLogger.error("Error in health check:", error);
+    }
+  });
 };
 
 startAgents().catch((error) => {
