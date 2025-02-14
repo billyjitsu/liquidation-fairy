@@ -6,7 +6,7 @@ This project utilizes a smart account or multisig to delegate an AI agent to han
 This is useful for DAOs that want to invest or leverage their positions for treasury management.
 
 **Diagram**
-![Diagram](https://imgur.com/a/hbTKSb3)
+![Diagram](https://i.imgur.com/Eh2WkQd.jpg)
 
 
 ## How it Works
