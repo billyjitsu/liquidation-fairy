@@ -31,13 +31,10 @@ import { generateWallet } from "./actions/generate-wallet.ts";
 import { transferDelegatedTokens } from "./actions/transfer-delegated-tokens.ts";
 import { borrowOnBehalf } from "./actions/borrow-on-behalf.ts";
 import { depositOnBehalf } from "./actions/deposit-on-behalf.ts";
-<<<<<<< Updated upstream
 import { healthFactorAction } from "./actions/health-factor.ts";
-=======
 import { swapTokensOnBehalf } from "./actions/swap-on-behalf.ts";
 import { repayOnBehalf } from "./actions/repay-on-behalf.ts";
 import { transferTokensOnBehalf } from "./actions/send-tokens-to-account.ts";
->>>>>>> Stashed changes
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -111,13 +108,10 @@ export function createAgent(
       transferDelegatedTokens,
       depositOnBehalf,
       borrowOnBehalf,
-<<<<<<< Updated upstream
       healthFactorAction,
-=======
       swapTokensOnBehalf,
       repayOnBehalf,
       transferTokensOnBehalf,
->>>>>>> Stashed changes
     ],
     services: [],
     managers: [],
