@@ -61,6 +61,21 @@ export const character: Character = {
         },
       },
     ],
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "what is my risk level?",
+        },
+      },
+      {
+        user: "Eliza",
+        content: {
+          text: "your health factor is currently {{healthFactor}}",
+          action: "HEALTH_FACTOR",
+        },
+      },
+    ],
   ],
   postExamples: [
     "How to use a smart account for secure investing",
