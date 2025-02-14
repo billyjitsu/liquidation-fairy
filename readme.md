@@ -50,7 +50,7 @@ The two main functions of the agent is to safely deposit assets and leverage our
 
 The actions refer to a web3.ts folder under the services folder. It holds the functions required for the actions to take place
 
-### The .env File
+## The .env File
 
 We are using contract addresses from our deployed fork of Aave with the tokens that we are mocking. (On mainnets, we would have token address for USDC, WETH and other assets). Ensure that your .env file is kept secure and never shared, as it contains sensitive wallet information.
 
@@ -67,3 +67,7 @@ We are using contract addresses from our deployed fork of Aave with the tokens t
 - WETH_TOKEN_ADDRESS="0xA0227DA17f6eFcc136D17479b55c564A54F4f8d1"
 - VARIABLE_DEBT_TOKEN="0xDBC8370B7bf5aCab88d6E39DD38Bcd57535D53a8"
 - DEX_ADDRESS="0x3E1c68A13839d6f77cc49AEd7D1E2E91f5bE0A22"
+
+
+### AI agent transactions:
+https://testnet.sonicscan.org/address/0x62394a362ba1BbD5125dD39e42bEa8B984b303B8

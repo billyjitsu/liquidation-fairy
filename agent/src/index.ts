@@ -223,7 +223,7 @@ const startAgents = async () => {
     chat();
   }
 
-  cron.schedule("*/120 * * * * *", async () => {
+  cron.schedule("*/180 * * * * *", async () => {
     try {
       elizaLogger.log("Checking health factor...");
       const healthFactor = await web3Service.getHealthFactor(
