@@ -306,11 +306,12 @@ export class Web3Service {
 
     // Check delegation allowance first
     const debtToken = new ethers.Contract(
-      debtTokenAddress,
+      process.env.VARIABLE_DEBT_TOKEN,
       DEBT_TOKEN_ABI,
       provider
     );
 
+    console.log("Checking borrow allowance...");
     const borrowAllowance = await debtToken.borrowAllowance(
       multisigAddress,
       aiWallet.address

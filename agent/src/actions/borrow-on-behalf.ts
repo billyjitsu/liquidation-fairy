@@ -69,46 +69,8 @@ export const borrowOnBehalf: Action = {
         }
 
         try {
-            // Check allowance first
-            const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-            const wallet = new ethers.Wallet(process.env.AI_AGENT_PRIVATE_KEY, provider);
-            
-            console.log("AI Agent Address:", wallet.address);
-            console.log("Borrowing on behalf of MultiSig:", process.env.DEPLOYED_MULTISIG);
 
-            const debtToken = new ethers.Contract(
-                process.env.DEBT_TOKEN,
-                DEBT_TOKEN_ABI,
-                provider
-            );
-
-            const borrowAllowance = await debtToken.borrowAllowance(
-                process.env.DEPLOYED_MULTISIG,
-                wallet.address
-            );
-
-            const debtDecimals = await debtToken.decimals();
-            console.log(
-                "Current borrow allowance:",
-                ethers.formatUnits(borrowAllowance, debtDecimals),
-                "USDC"
-            );
-
-            if (borrowAllowance.toString() === "0") {
-                return {
-                    text: `❌ Unable to borrow: No borrowing allowance\n\n` +
-                          `The AI agent (${wallet.address}) does not have permission to borrow on behalf of the MultiSig (${process.env.DEPLOYED_MULTISIG}).\n\n` +
-                          `Credit delegation needs to be set up first.`,
-                    action: "BORROW_ON_BEHALF_NO_ALLOWANCE",
-                    metadata: {
-                        error: "No borrowing allowance",
-                        aiAgent: wallet.address,
-                        multisig: process.env.DEPLOYED_MULTISIG,
-                        timestamp: new Date().toISOString()
-                    }
-                };
-            }
-
+            console.log("Borrowing stable tokens on behalf of contract wallet...");
         
             // Perform the borrow operation
             await web3Service.borrowOnBehalf(
