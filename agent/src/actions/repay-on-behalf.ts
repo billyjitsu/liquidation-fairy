@@ -1,6 +1,7 @@
 import TelegramClientInterface from "@elizaos/client-telegram";
 import web3Service from "../services/web3.ts";
 import { Action, IAgentRuntime, Memory, State } from "@elizaos/core";
+import { ethers } from "ethers";
 
 export const repayOnBehalf: Action = {
     name: "REPAY_ON_BEHALF",
@@ -33,11 +34,11 @@ export const repayOnBehalf: Action = {
     handler: async (agentRuntime: IAgentRuntime, message: Memory, state: State) => {
         console.log("Starting loan repayment process");
 
-        // Verify required environment variables
         const requiredEnvVars = [
             'AI_AGENT_PRIVATE_KEY',
             'DEPLOYED_MULTISIG',
             'DEBT_TOKEN',
+            'COLLATERAL_TOKEN',
             'LENDING_POOL_ADDRESS'
         ];
 
@@ -48,60 +49,93 @@ export const repayOnBehalf: Action = {
         }
 
         try {
-            await web3Service.repayOnBehalf(
-                process.env.DEPLOYED_MULTISIG,
-                process.env.AI_AGENT_PRIVATE_KEY,
+            const MINIMUM_REPAY_AMOUNT = ethers.parseUnits("50", 6); // 50 USDC
+            
+            // Check current debt token balance
+            const debtTokenBalance = await web3Service.checkTokenBalance(
                 process.env.DEBT_TOKEN,
-                process.env.LENDING_POOL_ADDRESS
+                process.env.AI_AGENT_PUBLIC_ADDRESS
             );
 
-            // Store repayment details in state
-            agentRuntime.composeState(message, {
-                lastAction: 'REPAY_ON_BEHALF',
-                repaymentDetails: {
-                    borrower: process.env.DEPLOYED_MULTISIG,
-                    debtToken: process.env.DEBT_TOKEN,
-                    lendingPool: process.env.LENDING_POOL_ADDRESS,
-                    timestamp: new Date().toISOString()
+            console.log(`Current debt token balance: ${debtTokenBalance.formattedBalance}`);
+
+            if (debtTokenBalance.rawBalance >= MINIMUM_REPAY_AMOUNT) {
+                // Direct repayment if we have enough debt tokens
+                console.log("Sufficient debt tokens found, proceeding with direct repayment...");
+                await web3Service.repayOnBehalf(
+                    process.env.DEPLOYED_MULTISIG,
+                    process.env.AI_AGENT_PRIVATE_KEY,
+                    process.env.DEBT_TOKEN,
+                    process.env.LENDING_POOL_ADDRESS
+                );
+            } else {
+                // Need to swap for more debt tokens
+                console.log("Insufficient debt tokens, checking collateral balance...");
+                
+                const collateralBalance = await web3Service.checkTokenBalance(
+                    process.env.COLLATERAL_TOKEN,
+                    process.env.AI_AGENT_PUBLIC_ADDRESS
+                );
+
+                if (collateralBalance.rawBalance > 0) {
+                    // Swap collateral for debt tokens
+                    console.log("Swapping collateral tokens for debt tokens...");
+                    await web3Service.swapTokensOnBehalf(
+                        process.env.AI_AGENT_PRIVATE_KEY,
+                        process.env.DEBT_TOKEN,  // from debt token
+                        process.env.COLLATERAL_TOKEN  // to collateral token
+                    );
+
+                    // Proceed with repayment
+                    await web3Service.repayOnBehalf(
+                        process.env.DEPLOYED_MULTISIG,
+                        process.env.AI_AGENT_PRIVATE_KEY,
+                        process.env.DEBT_TOKEN,
+                        process.env.LENDING_POOL_ADDRESS
+                    );
+                } else {
+                    // Pull tokens from multisig if no local tokens available
+                    console.log("No local tokens available, pulling from multisig...");
+                    await web3Service.withdrawTokensFromMultisig(
+                        process.env.AI_AGENT_PRIVATE_KEY,
+                        process.env.DEPLOYED_MULTISIG,
+                        process.env.COLLATERAL_TOKEN,
+                        process.env.DEBT_TOKEN
+                    );
+
+                    // Then swap and repay
+                    await web3Service.swapTokensOnBehalf(
+                        process.env.AI_AGENT_PRIVATE_KEY,
+                        process.env.DEBT_TOKEN,
+                        process.env.COLLATERAL_TOKEN
+                    );
+
+                    await web3Service.repayOnBehalf(
+                        process.env.DEPLOYED_MULTISIG,
+                        process.env.AI_AGENT_PRIVATE_KEY,
+                        process.env.DEBT_TOKEN,
+                        process.env.LENDING_POOL_ADDRESS
+                    );
                 }
-            });
+            }
 
             return {
-                text: `✅ Loan repayment completed successfully!\n\n` +
-                      `💰 Repaid debt tokens to:\n` +
+                text: `✅ Repayment completed successfully!\n\n` +
+                      `${debtTokenBalance.rawBalance >= MINIMUM_REPAY_AMOUNT ? 
+                        '💰 Direct repayment with existing debt tokens\n' :
+                        '🔄 Performed token swap before repayment\n'
+                      }` +
                       `🏦 Lending Pool: ${process.env.LENDING_POOL_ADDRESS}\n` +
-                      `👛 On behalf of: ${process.env.DEPLOYED_MULTISIG}\n\n` +
-                      `Would you like to check your remaining debt balance?`,
-                action: "REPAY_ON_BEHALF",
-                metadata: {
-                    borrower: process.env.DEPLOYED_MULTISIG,
-                    debtToken: process.env.DEBT_TOKEN,
-                    lendingPool: process.env.LENDING_POOL_ADDRESS,
-                    timestamp: new Date().toISOString()
-                }
+                      `👛 On behalf of: ${process.env.DEPLOYED_MULTISIG}`,
+                action: "REPAY_ON_BEHALF"
             };
-
         } catch (error) {
-            console.error("Error during loan repayment:", error);
-            
-            // Update state to reflect failed repayment
-            agentRuntime.composeState(message, {
-                lastAction: 'REPAY_ON_BEHALF_FAILED',
-                error: {
-                    message: error.message,
-                    timestamp: new Date().toISOString()
-                }
-            });
-
+            console.error("Error during repayment process:", error);
             return {
-                text: `❌ Failed to repay loan.\n\n` +
+                text: `❌ Operation failed.\n\n` +
                       `Error: ${error.message}\n\n` +
-                      `Would you like me to try the repayment again?`,
-                action: "REPAY_ON_BEHALF_ERROR",
-                metadata: {
-                    error: error.message,
-                    timestamp: new Date().toISOString()
-                }
+                      `Would you like me to try again?`,
+                action: "REPAY_ON_BEHALF_ERROR"
             };
         }
     },

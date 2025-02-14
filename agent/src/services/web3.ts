@@ -105,7 +105,6 @@ export class Web3Service {
     debtTokenAddress: string
   ): Promise<void> {
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-    // Fix: Use Wallet constructor instead of fromPhrase
     const wallet = new ethers.Wallet(privateKey, provider);
     const multisig = new ethers.Contract(multisigAddress, MULTISIG_ABI, wallet);
     const collateralToken = new ethers.Contract(
@@ -248,7 +247,7 @@ export class Web3Service {
       aiWallet
     );
 
-    const depositAmount = ethers.parseUnits("10", 18); // Adjust amount as needed
+    const depositAmount = ethers.parseUnits("100", 18); // Adjust amount as needed
     const referralCode = 0;
 
     // Check AI agent's token balance
@@ -836,6 +835,49 @@ export class Web3Service {
     // Convert the health factor from BigNumber to a number for easier comparison.
     const healthFactor = Number(ethers.formatEther(accountData.healthFactor));
     return healthFactor;
+  }
+
+  /**
+   * Checks the balance of any ERC20 token for a given wallet address
+   * @param tokenAddress - The address of the ERC20 token contract
+   * @param walletAddress - The address of the wallet to check the balance for
+   * @returns Object containing the raw balance, formatted balance, and number of decimals
+   * @throws Error if unable to retrieve token balance or decimals
+   */
+  async checkTokenBalance(
+    tokenAddress: string,
+    walletAddress: string
+  ): Promise<{
+    rawBalance: bigint;
+    formattedBalance: string;
+    decimals: number;
+  }> {
+    try {
+      const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+      const tokenContract = new ethers.Contract(
+        tokenAddress,
+        ERC20_ABI,
+        provider
+      );
+
+      // Get token decimals and balance in parallel
+      const [decimals, rawBalance] = await Promise.all([
+        tokenContract.decimals(),
+        tokenContract.balanceOf(walletAddress),
+      ]);
+
+      // Format the balance with proper decimal places
+      const formattedBalance = ethers.formatUnits(rawBalance, decimals);
+
+      return {
+        rawBalance,
+        formattedBalance,
+        decimals,
+      };
+    } catch (error) {
+      console.error("Error checking token balance:", error);
+      throw new Error(`Failed to check token balance: ${error.message}`);
+    }
   }
 }
 

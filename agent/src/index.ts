@@ -223,7 +223,7 @@ const startAgents = async () => {
     chat();
   }
 
-  cron.schedule("*/30 * * * * *", async () => {
+  cron.schedule("*/120 * * * * *", async () => {
     try {
       elizaLogger.log("Checking health factor...");
       const healthFactor = await web3Service.getHealthFactor(
@@ -232,16 +232,45 @@ const startAgents = async () => {
       );
       const healthFactorFixed = healthFactor.toFixed(2);
 
-      console.log("Health factor:", healthFactorFixed);
+      // console.log("Health factor:", healthFactorFixed);
       const now = Date.now();
 
       if (healthFactor < CRITICAL_THRESHOLD) {
-        const message = `🚨 CRITICAL ALERT: Your health factor is ${healthFactorFixed}! Immediate action required to avoid liquidation.`;
-        if (message) {
-          await sendHealthAlert(directClient, message);
+        // Execute repayment when health factor is critical
+        try {
+          
+
+          const message = `🚨 CRITICAL ALERT: Health factor was ${healthFactorFixed}. Auto-repayment executed successfully!`;
+          if (message) {
+            await sendHealthAlert(directClient, message);
+          }
+          console.log("\x1b[31m[CRITICAL]\x1b[0m");
+
+          console.log("attempting repayment");
+
+          await web3Service.repayOnBehalf(
+            process.env.DEPLOYED_MULTISIG,
+            process.env.AI_AGENT_PRIVATE_KEY,
+            process.env.DEBT_TOKEN,
+            process.env.LENDING_POOL_ADDRESS
+          );
+
+          // Get updated health factor after repayment
+          const newHealthFactor = await web3Service.getHealthFactor(
+            process.env.LENDING_POOL_ADDRESS,
+            process.env.DEPLOYED_MULTISIG
+          );
+
+          const updateMessage = `New health factor after repayment: ${newHealthFactor.toFixed(2)}`;
+          await sendHealthAlert(directClient, updateMessage);
+
+        } catch (repayError) {
+          const errorMessage = `🚨 CRITICAL: Failed to execute auto-repayment. Health factor: ${healthFactorFixed}. Error: ${repayError.message}`;
+          await sendHealthAlert(directClient, errorMessage);
+          console.error("Repayment error:", repayError);
         }
 
-        console.log("\x1b[31m[CRITICAL]\x1b[0m");
+       
       } else if (healthFactor < WARNING_THRESHOLD) {
         const message = `⚠️ WARNING: Your health factor is ${healthFactorFixed}. Consider adding collateral or reducing debt.`;
 
@@ -252,7 +281,7 @@ const startAgents = async () => {
 
         console.log("\x1b[33m[WARNING]\x1b[0m");
       } else {
-        console.log("\x1b[32m[HEALTHY]\x1b[0m");
+        // console.log("\x1b[32m[HEALTHY]\x1b[0m");
       }
     } catch (error) {
       elizaLogger.error("Error in health check:", error);

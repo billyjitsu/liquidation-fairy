@@ -23,6 +23,21 @@ export const depositOnBehalf: Action = {
                 },
             },
         ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "I want to deposit and long my postion of tokens",
+                },
+            },
+            {
+                user: "Eliza",
+                content: {
+                    text: "When we put in the collateral tokens, if you want to to borrow against this postion I'll need you to allow delegation to borrow on you behalf",
+                    action: "DEPOSIT_ON_BEHALF",
+                },
+            },
+        ],
     ],
     validate: async (agentRuntime: IAgentRuntime, message: Memory, state: State) => {
         const text = message.content.text.toLowerCase();
