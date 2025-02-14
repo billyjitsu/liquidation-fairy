@@ -28,6 +28,8 @@ import unwatchPosition from "./evaluators/unwatch-position.ts";
 import { generateWallet } from "./actions/generate-wallet.ts";
 import cron from "node-cron";
 import web3Service from "./services/web3.ts";
+import { transferDelegatedTokens } from "./actions/deposit-on-behalf.ts";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,7 +98,7 @@ export function createAgent(
       character.settings?.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
     ].filter(Boolean),
     providers: [],
-    actions: [generateWallet],
+    actions: [generateWallet, transferDelegatedTokens],
     services: [],
     managers: [],
     cacheManager: cache,

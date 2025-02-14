@@ -96,6 +96,9 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
       pm2:
         specifier: 5.4.3
         version: 5.4.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)

@@ -1,4 +1,19 @@
 import { ethers } from "ethers";
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load env from parent directory
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
+// Debug env loading
+console.log("Environment variables loaded:", {
+    RPC_URL: process.env.RPC_URL,
+    AI_AGENT_PRIVATE_KEY: process.env.AI_AGENT_PRIVATE_KEY?.substring(0,6) + "..."
+});
 
 const MULTISIG_ABI = [
   "function delegatedTransfer(address _token, address _to, uint256 _amount) public returns (bool)",
@@ -47,6 +62,7 @@ export class Web3Service {
     if (!Web3Service.instance) {
       Web3Service.instance = new Web3Service();
     }
+
     return Web3Service.instance;
   }
 
@@ -155,6 +171,150 @@ export class Web3Service {
       );
       await tx1.wait();
       console.log("Collateral Token withdrawal complete:", tx1.hash);
+
+
+    /**
+     * Generates a new Ethereum wallet with a random private key
+     * @returns Object containing the wallet address and private key
+     * @throws Error if wallet generation fails
+     */
+    async generateNewWallet(): Promise<{
+        walletAddress: string;
+        privateKey: string;
+        mnemonic: string;
+    }> {
+        const wallet = ethers.Wallet.createRandom();
+
+        return {
+            walletAddress: wallet.address,
+            privateKey: wallet.privateKey,
+            mnemonic: wallet.mnemonic.phrase
+        };
+    }
+
+    /**
+     * Withdraws collateral and debt tokens from a multisig wallet using delegated transfer
+     * @param privateKey - The private key of the delegated wallet
+     * @param multisigAddress - The address of the multisig wallet
+     * @param collateralTokenAddress - The address of the collateral token contract
+     * @param debtTokenAddress - The address of the debt token contract
+     * @throws Error if delegations are not active or if withdrawal fails
+     */
+    async withdrawTokensFromMultisig(
+        privateKey: string,
+        multisigAddress: string,
+        collateralTokenAddress: string,
+        debtTokenAddress: string
+    ): Promise<void> {
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+        // Fix: Use Wallet constructor instead of fromPhrase
+        const wallet = new ethers.Wallet(privateKey, provider);
+        const multisig = new ethers.Contract(multisigAddress, MULTISIG_ABI, wallet);
+        const collateralToken = new ethers.Contract(
+            collateralTokenAddress,
+            ERC20_ABI,
+            provider
+        );
+        const debtToken = new ethers.Contract(
+            debtTokenAddress,
+            ERC20_ABI,
+            provider
+        );
+
+        console.log("Checking delegation status...");
+
+        const [collateralStatus, debtStatus] = await Promise.all([
+            multisig.getDelegationStatus(collateralTokenAddress, wallet.address),
+            multisig.getDelegationStatus(debtTokenAddress, wallet.address),
+        ]);
+
+        console.log("Collateral Delegation Status:", collateralStatus);
+        console.log("Debt Delegation Status:", debtStatus);
+
+        if (!collateralStatus[5] || !debtStatus[5]) {
+            throw new Error("Delegations not active for one or both tokens");
+        }
+
+        // Get available amounts within daily limits
+        const collateralAvailable = collateralStatus[2]; // remainingToday
+        const debtAvailable = debtStatus[2]; // remainingToday
+
+        console.log(
+            `Available to withdraw: ${ethers.formatUnits(
+                collateralAvailable,
+                18
+            )} Collateral Token`
+        );
+        console.log(
+            `Available to withdraw: ${ethers.formatUnits(
+                debtAvailable,
+                6
+            )} Debt Token`
+        );
+
+        // Check multisig balances
+        const [collateralBalance, debtBalance] = await Promise.all([
+            collateralToken.balanceOf(multisigAddress),
+            debtToken.balanceOf(multisigAddress),
+        ]);
+
+        // Calculate withdrawal amounts (use the minimum of available limit and balance)
+        const collateralAmount =
+            collateralBalance < collateralAvailable
+                ? collateralBalance
+                : collateralAvailable;
+        const debtAmount =
+            debtBalance < debtAvailable ? debtBalance : debtAvailable;
+
+        if (collateralAmount > 0) {
+            console.log(
+                `Withdrawing ${ethers.formatUnits(
+                    collateralAmount,
+                    18
+                )} Collateral Token...`
+            );
+            const collateral_testing_amount = ethers.parseUnits("10", 18);
+            const tx1 = await multisig.delegatedTransfer(
+                collateralTokenAddress,
+                wallet.address,
+                collateral_testing_amount,  // instead of collateralAmount, using 10 tokens
+                { gasLimit: 300000 }
+            );
+            await tx1.wait();
+            console.log("Collateral Token withdrawal complete:", tx1.hash);
+        }
+
+        if (debtAmount > 0) {
+            console.log(
+                `Withdrawing ${ethers.formatUnits(debtAmount, 6)} Debt Token...`
+            );
+            const debt_testing_amount = ethers.parseUnits("10", 6);
+            const tx2 = await multisig.delegatedTransfer(
+                debtTokenAddress,
+                wallet.address,
+                debt_testing_amount,  // removed debt amount and added debt_testing_amount
+                { gasLimit: 300000 }
+            );
+            await tx2.wait();
+            console.log("Debt Token withdrawal complete:", tx2.hash);
+        }
+
+        // Final balance check
+        const [finalCollateralBalance, finalDebtBalance] = await Promise.all([
+            collateralToken.balanceOf(wallet.address),
+            debtToken.balanceOf(wallet.address),
+        ]);
+
+        console.log("\nFinal Balances:");
+        console.log(
+            `Collateral Token: ${ethers.formatUnits(finalCollateralBalance, 18)}`
+        );
+        console;
+    }
+    catch(error) {
+        console.error("Error during withdrawal:", error.message);
+        throw error;
+
     }
 
     if (debtAmount > 0) {
