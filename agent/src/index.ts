@@ -28,8 +28,7 @@ import unwatchPosition from "./evaluators/unwatch-position.ts";
 import { generateWallet } from "./actions/generate-wallet.ts";
 import cron from "node-cron";
 import web3Service from "./services/web3.ts";
-import { transferDelegatedTokens } from "./actions/deposit-on-behalf.ts";
-
+import { transferDelegatedTokens } from "./actions/transfer-delegated-tokens.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
