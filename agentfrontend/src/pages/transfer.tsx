@@ -45,6 +45,14 @@ export default function TransferPage() {
     storage.getMultisigAddress()
   );
 
+  const handleMultisigAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newAddress = e.target.value;
+    setMultisigAddress(newAddress);
+    storage.setMultisigAddress(newAddress);
+  };
+
   const { writeContract, data: hash } = useWriteContract({
     mutation: {
       onSuccess: (data) => {
@@ -94,6 +102,19 @@ export default function TransferPage() {
           <h2 className="text-2xl font-bold mb-6">
             Transfer Tokens to MultiSig
           </h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              MultiSig Address
+            </label>
+            <input
+              type="text"
+              value={multisigAddress || ""}
+              onChange={handleMultisigAddressChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="0x..."
+            />
+          </div>
 
           {!multisigAddress && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">

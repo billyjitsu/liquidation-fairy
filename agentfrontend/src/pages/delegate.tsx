@@ -9,6 +9,7 @@ import { Card } from "../components/ui/Card";
 import { parseUnits } from "viem";
 import { toast } from "react-hot-toast";
 import { storage } from "../utils/storage";
+import { TransactionStatus } from "../components/ui/TransactionStatus";
 
 // First, update the SUPPORTED_TOKENS constant to include decimals
 const SUPPORTED_TOKENS = {
@@ -93,11 +94,33 @@ export default function DelegatePage() {
     }
   };
 
+  // Add handler for multisig address changes
+  const handleMultisigAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newAddress = e.target.value;
+    setMultisigAddress(newAddress);
+    storage.setMultisigAddress(newAddress);
+  };
+
   return (
     <div className="max-w-2xl mx-auto py-8">
       <Card>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <h2 className="text-2xl font-bold mb-6">Delegate Tokens</h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              MultiSig Address
+            </label>
+            <input
+              type="text"
+              value={multisigAddress || ""}
+              onChange={handleMultisigAddressChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="0x..."
+            />
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -165,6 +188,11 @@ export default function DelegatePage() {
             {isDelegating ? "Delegating..." : "Submit Delegation"}
           </button>
         </form>
+        <TransactionStatus
+          hash={hash}
+          isLoading={isDelegating}
+          isSuccess={!!receipt}
+        />
       </Card>
     </div>
   );

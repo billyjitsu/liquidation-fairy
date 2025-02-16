@@ -140,7 +140,7 @@ async function monitorHealthFactor(targetAddress) {
 }
 
 // Get target address from command line or environment variable
-const targetAddress = process.argv[2] || process.env.AI_AGENT_PUBLIC_ADDRESS;
+const targetAddress = process.argv[2] || process.env.DEPLOYED_MULTISIG;
 
 if (!targetAddress) {
     console.error('Please provide an address to monitor as a command line argument or in the .env file');

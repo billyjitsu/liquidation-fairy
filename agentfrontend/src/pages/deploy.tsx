@@ -8,6 +8,7 @@ import { Card } from "../components/ui/Card";
 import { toast } from "react-hot-toast";
 import multisigArtifact from "../contracts/abi.json";
 import { storage } from "../utils/storage";
+import { TransactionStatus } from "../components/ui/TransactionStatus";
 
 export default function DeployPage() {
   const { address } = useAccount();
@@ -102,6 +103,11 @@ export default function DeployPage() {
             )}
           </div>
         </div>
+        <TransactionStatus
+          hash={deployData}
+          isLoading={isDeploying}
+          isSuccess={!!receipt}
+        />
       </Card>
     </div>
   );

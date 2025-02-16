@@ -1,8 +1,8 @@
 const ethers = require('ethers');
 require('dotenv').config();
 
-const collateralAmount = ethers.parseUnits("100.0", 18); 
-const debtAmount = ethers.parseUnits("100.0", 6); 
+const collateralAmount = ethers.parseUnits("1000.0", 18); 
+const debtAmount = ethers.parseUnits("1000.0", 6); 
 
 const ERC20_ABI = [
     "function transfer(address to, uint256 amount) public returns (bool)",
