@@ -5,7 +5,10 @@ import {
   useWriteContract,
 } from "wagmi";
 import { Card } from "../components/ui/Card";
-import { parseUnits, encodeAbiParameters, keccak256 } from "viem";
+import {
+  parseUnits,
+  encodeFunctionData,
+} from "viem";
 import { toast } from "react-hot-toast";
 import { TransactionStatus } from "../components/ui/TransactionStatus";
 import { storage } from "../utils/storage";
@@ -64,6 +67,20 @@ const publicClient = createPublicClient({
   chain: sonicTestnet,
   transport: http(sonicTestnet.rpcUrls.default.http[0]), // Use the specific RPC URL from your chain config
 });
+
+// First, let's define the debt token ABI
+const DEBT_TOKEN_ABI = [
+  {
+    type: "function",
+    name: "approveDelegation",
+    inputs: [
+      { type: "address", name: "delegatee" },
+      { type: "uint256", name: "amount" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+] as const;
 
 export default function BorrowPage() {
   const { address } = useAccount();
@@ -148,25 +165,12 @@ export default function BorrowPage() {
         decimals,
       });
 
-      // Define the full function signature including the name
-      const functionSignature = "approveDelegation(address,uint256)";
-
-      // Calculate the function selector (first 4 bytes of the keccak256 hash of the function signature)
-      const functionSelector = `0x${keccak256(
-        Buffer.from(functionSignature)
-      ).slice(2, 10)}`;
-
-      // Encode the parameters
-      const encodedParams = encodeAbiParameters(
-        [
-          { name: "delegatee", type: "address" },
-          { name: "amount", type: "uint256" },
-        ],
-        [delegatee as `0x${string}`, parsedAmount]
-      );
-
-      // Combine the function selector with the encoded parameters
-      const encodedData = `${functionSelector}${encodedParams.slice(2)}`;
+      // Use encodeFunctionData instead of manual encoding
+      const encodedData = encodeFunctionData({
+        abi: DEBT_TOKEN_ABI,
+        functionName: "approveDelegation",
+        args: [delegatee as `0x${string}`, parsedAmount],
+      });
 
       console.log("Encoded Data:", encodedData);
 
@@ -174,11 +178,7 @@ export default function BorrowPage() {
         address: multisigAddress as `0x${string}`,
         abi: MULTISIG_ABI,
         functionName: "submitTransaction",
-        args: [
-          tokenAddress as `0x${string}`,
-          BigInt(0),
-          encodedData as `0x${string}`,
-        ],
+        args: [tokenAddress as `0x${string}`, BigInt(0), encodedData],
       });
     } catch (error) {
       console.error("Submit error:", error);
