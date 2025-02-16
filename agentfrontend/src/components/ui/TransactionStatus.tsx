@@ -1,4 +1,4 @@
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 
 interface TransactionStatusProps {
   hash?: string;
@@ -24,7 +24,7 @@ export const TransactionStatus: React.FC<TransactionStatusProps> = ({
         {isSuccess && <CheckCircleIcon className="h-5 w-5 text-green-500" />}
         {isError && <XCircleIcon className="h-5 w-5 text-red-500" />}
         <a
-          href={`https://testnet.sonicscan.org/${hash}`}
+          href={`https://testnet.sonicscan.org/tx/${hash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-500 hover:text-blue-600"

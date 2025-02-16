@@ -45,7 +45,7 @@ async function setupCreditDelegation() {
         console.log('Current Delegation Allowance:', ethers.formatUnits(currentAllowance, decimals));
 
         // Set delegation amount (e.g., 1000 USDC)
-        const delegationAmount = ethers.parseUnits("1000", decimals);
+        const delegationAmount = ethers.parseUnits("1", decimals);
         console.log('Setting Delegation Amount:', ethers.formatUnits(delegationAmount, decimals));
 
         // Encode the approveDelegation function call
@@ -53,6 +53,8 @@ async function setupCreditDelegation() {
             'approveDelegation',
             [process.env.AI_AGENT_PUBLIC_ADDRESS, delegationAmount]
         );
+
+        console.log('Delegation ENCODED data:', delegationData);
 
         // Submit transaction to MultiSig
         console.log('Submitting delegation transaction to MultiSig...');
