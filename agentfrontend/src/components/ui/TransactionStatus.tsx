@@ -24,7 +24,7 @@ export const TransactionStatus: React.FC<TransactionStatusProps> = ({
         {isSuccess && <CheckCircleIcon className="h-5 w-5 text-green-500" />}
         {isError && <XCircleIcon className="h-5 w-5 text-red-500" />}
         <a
-          href={`https://etherscan.io/tx/${hash}`}
+          href={`https://testnet.soniclabs.com/${hash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-500 hover:text-blue-600"

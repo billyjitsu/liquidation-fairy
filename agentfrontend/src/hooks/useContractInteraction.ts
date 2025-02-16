@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useContractWrite, useWaitForTransaction } from 'wagmi';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { useWriteContract, useWaitForTransaction } from "wagmi";
+import { toast } from "react-hot-toast";
 
 interface UseContractInteractionProps {
   address: `0x${string}`;
@@ -17,31 +17,37 @@ export function useContractInteraction({
 }: UseContractInteractionProps) {
   const [isPending, setIsPending] = useState(false);
 
-  const { write, data } = useContractWrite({
-    address,
-    abi,
-    functionName,
+  const { writeContract, data } = useWriteContract({
+    mutation: {
+      onSuccess: (data) => {
+        onSuccess?.(data);
+        setIsPending(false);
+      },
+      onError: () => {
+        toast.error("Transaction failed");
+        setIsPending(false);
+      },
+    },
   });
 
   const { isLoading } = useWaitForTransaction({
     hash: data?.hash,
-    onSuccess: (data) => {
-      toast.success('Transaction successful!');
-      onSuccess?.(data);
-      setIsPending(false);
-    },
-    onError: () => {
-      toast.error('Transaction failed');
-      setIsPending(false);
+    onSuccess: () => {
+      toast.success("Transaction successful!");
     },
   });
 
   const execute = async (...args: any[]) => {
     try {
       setIsPending(true);
-      await write({ args });
+      await writeContract({
+        address,
+        abi,
+        functionName,
+        args,
+      });
     } catch (error) {
-      toast.error('Failed to submit transaction');
+      toast.error("Failed to submit transaction");
       setIsPending(false);
     }
   };

@@ -11,7 +11,7 @@ export const sonicTestnet = defineChain({
     symbol: "S",
   },
   rpcUrls: {
-    default: { http: ["https://rpc.testnet.soniclabs.com"] },
+    default: { http: ["https://rpc.blaze.soniclabs.com"] },
   },
   blockExplorers: {
     default: {
