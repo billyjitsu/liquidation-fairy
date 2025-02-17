@@ -6,7 +6,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { Card } from "../components/ui/Card";
-import { parseUnits } from "viem";
+import { parseUnits, formatUnits } from "viem";
 import { toast } from "react-hot-toast";
 import { storage } from "../utils/storage";
 import { TransactionStatus } from "../components/ui/TransactionStatus";
@@ -22,6 +22,15 @@ const SUPPORTED_TOKENS = {
   },
 } as const;
 
+type DelegationStatus = [
+  bigint, // dailyLimit
+  bigint, // spentToday
+  bigint, // remainingToday
+  bigint, // timeUntilReset
+  bigint, // confirmations
+  boolean // isActive
+];
+
 export default function DelegatePage() {
   const { address } = useAccount();
   const [tokenAddress, setTokenAddress] = useState("");
@@ -31,6 +40,8 @@ export default function DelegatePage() {
   const [multisigAddress, setMultisigAddress] = useState(
     storage.getMultisigAddress()
   );
+  const [delegationStatus, setDelegationStatus] =
+    useState<DelegationStatus | null>(null);
 
   const { writeContract, data: hash } = useWriteContract({
     mutation: {
@@ -49,6 +60,35 @@ export default function DelegatePage() {
       hash,
     });
 
+  const { data: status } = useReadContract({
+    address: multisigAddress as `0x${string}`,
+    abi: [
+      {
+        type: "function",
+        name: "getDelegationStatus",
+        inputs: [
+          { type: "address", name: "_token" },
+          { type: "address", name: "_delegate" },
+        ],
+        outputs: [
+          { type: "uint256", name: "dailyLimit" },
+          { type: "uint256", name: "spentToday" },
+          { type: "uint256", name: "remainingToday" },
+          { type: "uint256", name: "timeUntilReset" },
+          { type: "uint256", name: "confirmations" },
+          { type: "bool", name: "isActive" },
+        ],
+        stateMutability: "view",
+      },
+    ],
+    functionName: "getDelegationStatus",
+    args: [tokenAddress as `0x${string}`, delegateAddress as `0x${string}`],
+    query: {
+      enabled: Boolean(tokenAddress && delegateAddress && multisigAddress),
+      refetchInterval: 1000, // Refetch every second
+    },
+  });
+
   useEffect(() => {
     if (receipt) {
       toast.success("Delegation confirmed!");
@@ -58,6 +98,12 @@ export default function DelegatePage() {
       setAmount("");
     }
   }, [receipt]);
+
+  useEffect(() => {
+    if (status) {
+      setDelegationStatus(status as DelegationStatus);
+    }
+  }, [status]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,6 +224,18 @@ export default function DelegatePage() {
               placeholder="0.0"
             />
           </div>
+
+          {delegationStatus && (
+            <div className="p-4 bg-gray-100 rounded-md">
+              <h3 className="text-lg font-semibold mb-2">Delegation Status</h3>
+              <p>Daily Limit: {formatUnits(delegationStatus[0], decimals)}</p>
+              <p>Spent Today: {formatUnits(delegationStatus[1], decimals)}</p>
+              <p>
+                Remaining Today: {formatUnits(delegationStatus[2], decimals)}
+              </p>
+              <p>Time Until Reset: {delegationStatus[3].toString()} seconds</p>
+            </div>
+          )}
 
           <button
             type="submit"
