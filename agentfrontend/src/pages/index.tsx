@@ -82,14 +82,32 @@ const Home: NextPage = () => {
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            <h2 className="text-xl font-semibold text-amber-600 mb-3">
+              4. Delegate Borrowing
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Enable borrowing capabilities by delegating debt token allowances
+              through your MultiSig. Manage USDC borrowing permissions securely.
+            </p>
+            <Link
+              href="/borrow"
+              className="text-amber-500 hover:text-amber-700 font-medium"
+            >
+              Setup Borrowing →
+            </Link>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 md:col-span-2">
             <h2 className="text-xl font-semibold text-orange-600 mb-3">
               Security Features
             </h2>
-            <ul className="list-disc list-inside text-gray-600 space-y-2">
+            <ul className="list-disc list-inside text-gray-600 space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2">
               <li>MultiSig wallet protection</li>
               <li>Daily transaction limits</li>
               <li>Revocable delegations</li>
               <li>Transparent on-chain operations</li>
+              <li>Secure borrowing permissions</li>
+              <li>Multi-step transaction approval</li>
             </ul>
           </div>
         </div>
@@ -100,7 +118,11 @@ const Home: NextPage = () => {
             <li>Deploy your personal MultiSig wallet contract</li>
             <li>Transfer your tokens to the MultiSig wallet</li>
             <li>Set up delegation permissions for the AI agent</li>
-            <li>The agent can now trade within your specified limits</li>
+            <li>Configure borrowing allowances if needed</li>
+            <li>
+              The agent can now trade and manage positions within your specified
+              limits
+            </li>
             <li>Monitor performance and adjust settings anytime</li>
           </ol>
         </div>

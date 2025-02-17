@@ -11,7 +11,6 @@ import { toast } from "react-hot-toast";
 import { storage } from "../utils/storage";
 import { TransactionStatus } from "../components/ui/TransactionStatus";
 
-// First, update the SUPPORTED_TOKENS constant to include decimals
 const SUPPORTED_TOKENS = {
   API3: {
     address: "0x1afBD344C4eBFD0671EAdC1eAeF25DA4De61b3EE",
