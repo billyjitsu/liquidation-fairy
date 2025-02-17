@@ -5,7 +5,7 @@ import { Action, IAgentRuntime, Memory, State } from "@elizaos/core";
 export const generateWallet: Action = {
   name: "GENERATE_WALLET",
   similes: ["CREATE_WALLET", "MAKE_WALLET", "NEW_WALLET"],
-  description: "Generate a new crypto wallet",
+  description: "Generate a new wallet for token operations",
   examples: [
     [
       {

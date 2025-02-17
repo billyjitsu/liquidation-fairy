@@ -274,7 +274,7 @@ const startAgents = async () => {
       } else if (healthFactor < WARNING_THRESHOLD) {
         const message = `⚠️ WARNING: Your health factor is ${healthFactorFixed}. Consider adding collateral or reducing debt.`;
 
-        console.log(directClient, "client");
+        // console.log(directClient, "client");
         if (message) {
           await sendHealthAlert(directClient, message);
         }

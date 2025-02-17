@@ -61,8 +61,8 @@ export const transferDelegatedTokens: Action = {
                     collateralTokenAddress: process.env.COLLATERAL_TOKEN,
                     debtTokenAddress: process.env.DEBT_TOKEN,
                     multisigAddress: process.env.DEPLOYED_MULTISIG,
-                    collateralWithdrawn: "10", // Since you're using testing amount of 10
-                    debtWithdrawn: "10",       // Since you're using testing amount of 10
+                    collateralWithdrawn: "100", // Since you're using testing amount of 10
+                    debtWithdrawn: "100",       // Since you're using testing amount of 10
                     timestamp: new Date().toISOString()
                 }
             });
