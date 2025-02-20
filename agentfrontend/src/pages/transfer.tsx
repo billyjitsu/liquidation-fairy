@@ -4,10 +4,10 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { Card } from "../components/ui/Card";
+import { Card } from "../components/ui/card";
 import { parseUnits } from "viem";
 import { toast } from "react-hot-toast";
-import { TransactionStatus } from "../components/ui/TransactionStatus";
+import { TransactionStatus } from "../components/TransactionStatus";
 import { storage } from "../utils/storage";
 
 const SUPPORTED_TOKENS = {

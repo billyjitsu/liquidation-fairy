@@ -19,7 +19,6 @@ const Home: NextPage = () => {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">DeFi Agent System</h1>
-          {/* <ConnectButton /> */}
         </div>
 
         <div className="prose lg:prose-xl mb-12">
@@ -127,10 +126,9 @@ const Home: NextPage = () => {
           </ol>
         </div>
       </main>
-
-      <footer className="text-center py-8 text-gray-600">
+      <div className="text-center py-8 text-gray-600">
         <p>Secure DeFi automation powered by smart contracts</p>
-      </footer>
+      </div>
     </div>
   );
 };

@@ -5,11 +5,11 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { Card } from "../components/ui/Card";
+import { Card } from "../components/ui/card";
 import { parseUnits, formatUnits } from "viem";
 import { toast } from "react-hot-toast";
 import { storage } from "../utils/storage";
-import { TransactionStatus } from "../components/ui/TransactionStatus";
+import { TransactionStatus } from "../components/TransactionStatus";
 
 const SUPPORTED_TOKENS = {
   API3: {

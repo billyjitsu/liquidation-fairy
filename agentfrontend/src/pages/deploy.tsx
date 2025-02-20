@@ -4,11 +4,11 @@ import {
   useWaitForTransactionReceipt,
   useDeployContract,
 } from "wagmi";
-import { Card } from "../components/ui/Card";
+import { Card } from "../components/ui/card";
 import { toast } from "react-hot-toast";
 import multisigArtifact from "../contracts/abi.json";
 import { storage } from "../utils/storage";
-import { TransactionStatus } from "../components/ui/TransactionStatus";
+import { TransactionStatus } from "../components/TransactionStatus";
 
 export default function DeployPage() {
   const { address } = useAccount();
