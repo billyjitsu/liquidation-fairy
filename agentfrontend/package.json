@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@elizaos/core": "^0.25.6-alpha.1",
     "@heroicons/react": "^2.2.0",
     "@rainbow-me/rainbowkit": "^2.2.3",
     "@tailwindcss/postcss": "^4.0.6",
