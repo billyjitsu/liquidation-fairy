@@ -1,11 +1,12 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { parseUnits, encodeFunctionData } from "viem";
+import { parseUnits, encodeFunctionData, TransactionReceipt } from "viem";
 import { MULTISIG_ABI } from "@/ABI/MULTISIG_ABI";
 import { DEBT_TOKEN_ABI } from "@/ABI/DEBT_TOKEN_ABI";
 import { Input } from "@/components/ui/input";
@@ -29,10 +30,10 @@ import {
   useWriteContract,
 } from "wagmi";
 import { useExecuteTransaction } from "@/hooks/use-execute-transaction";
-import { useEffect } from "react";
-import { multisigAddressAtom } from "@/stores/jotaiStore";
-import { useAtom, useAtomValue } from "jotai";
-import { TransactionStatus } from "./TransactionStatus";
+import { useEffect, useState } from "react";
+import { multisigAddressAtom } from "@/stores/jotai-store";
+import { useAtom } from "jotai";
+import { TransactionStatus } from "./transaction-status";
 
 interface DebtToken {
   readonly name: string;
@@ -60,7 +61,12 @@ type BorrowFormData = z.infer<typeof borrowFormSchema>;
 
 export default function BorrowCard() {
   const [multisigAddress, setMultisigAddress] = useAtom(multisigAddressAtom);
-  const { address } = useAccount();
+  const [executeHash, setExecuteHash] = useState<string | undefined>(undefined);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executeReceipt, setExecuteReceipt] = useState<
+    TransactionReceipt | undefined
+  >(undefined);
+
   const {
     register,
     handleSubmit,
@@ -73,9 +79,12 @@ export default function BorrowCard() {
     resolver: zodResolver(borrowFormSchema),
   });
 
-  // ----------------------------------------------------------------
-  // Handle Submit Delegation
-  // ----------------------------------------------------------------
+  useEffect(() => {
+    if (multisigAddress) {
+      setValue("multisigAddress", multisigAddress);
+    }
+  }, [multisigAddress]);
+
   const { writeContractAsync: writeSubmit, data: submitHash } =
     useWriteContract();
 
@@ -109,33 +118,16 @@ export default function BorrowCard() {
     }
   };
 
-  // ----------------------------------------------------------------
-  // Handle Execute Delegation
-  // ----------------------------------------------------------------
-  const { writeContractAsync: writeExecute, data: executeHash } =
-    useWriteContract();
-
-  const { isPending: isExecuting, mutateAsync: executeTransaction } =
-    useExecuteTransaction({
-      contractWriter: writeExecute,
-    });
-
-  const { data: executeReceipt } = useWaitForTransactionReceipt({
-    hash: executeHash,
-  });
-
-  useEffect(() => {
-    if (executeReceipt) {
-      toast.success("Delegation executed successfully");
-    }
-  }, [executeReceipt]);
-
   return (
     <div className="flex flex-col gap-4">
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
             <CardTitle>Delegate Borrow Allowance</CardTitle>
+            <CardDescription className="mt-2">
+              Enable borrowing capabilities by delegating debt token allowances
+              through your MultiSig. Manage USDC borrowing permissions securely.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -149,6 +141,7 @@ export default function BorrowCard() {
             <div>
               <Label className="mb-1">Debt Token</Label>
               <Select
+                defaultValue={DEBT_TOKENS[0].address}
                 onValueChange={(value) => {
                   setValue("debtTokenAddress", value);
                 }}
@@ -185,25 +178,12 @@ export default function BorrowCard() {
             >
               {isSubmitting ? "Submitting..." : "Submit Delegation"}
             </Button>
-            <Button
-              type="button"
-              className="w-full"
-              variant="secondary"
-              onClick={() => {
-                if (!multisigAddress) {
-                  toast.error("No multisig address found");
-                  return;
-                }
-
-                executeTransaction({
-                  multisigAddress: multisigAddress,
-                  userAddress: address as `0x${string}`,
-                });
-              }}
-              disabled={!address || !isSubmitSuccessful || !submitReceipt}
-            >
-              {isExecuting ? "Executi ng..." : "Execute Delegation"}
-            </Button>
+            <ExecutionButton
+              isDisabled={!isSubmitSuccessful || !submitReceipt}
+              setExecuteHash={setExecuteHash}
+              setIsExecuting={setIsExecuting}
+              setExecuteReceipt={setExecuteReceipt}
+            />
           </CardFooter>
         </Card>
       </form>
@@ -215,3 +195,68 @@ export default function BorrowCard() {
     </div>
   );
 }
+
+interface ExecutionButtonProps {
+  isDisabled: boolean;
+  setExecuteHash: (hash: string | undefined) => void;
+  setIsExecuting: (isExecuting: boolean) => void;
+  setExecuteReceipt: (receipt: TransactionReceipt | undefined) => void;
+}
+
+const ExecutionButton = ({
+  isDisabled,
+  setExecuteHash,
+  setIsExecuting,
+  setExecuteReceipt,
+}: ExecutionButtonProps) => {
+  const { address } = useAccount();
+  const [multisigAddress] = useAtom(multisigAddressAtom);
+  const { writeContractAsync: writeExecute, data: executeHash } =
+    useWriteContract();
+
+  const { isPending: isExecuting, mutateAsync: executeTransaction } =
+    useExecuteTransaction({
+      contractWriter: writeExecute,
+    });
+
+  const { data: executeReceipt } = useWaitForTransactionReceipt({
+    hash: executeHash,
+  });
+
+  useEffect(() => {
+    if (executeHash) {
+      setExecuteHash(executeHash);
+    }
+  }, [executeHash]);
+
+  useEffect(() => {
+    if (executeReceipt) {
+      toast.success("Delegation executed successfully");
+      setExecuteReceipt(executeReceipt);
+    }
+  }, [executeReceipt]);
+
+  return (
+    <Button
+      type="button"
+      className="w-full"
+      variant="secondary"
+      onClick={async () => {
+        if (!multisigAddress) {
+          toast.error("No multisig address found");
+          return;
+        }
+
+        setIsExecuting(true);
+        const hash = await executeTransaction({
+          multisigAddress: multisigAddress,
+          userAddress: address as `0x${string}`,
+        });
+        setIsExecuting(false);
+      }}
+      disabled={!address || isDisabled}
+    >
+      {isExecuting ? "Executing..." : "Execute Delegation"}
+    </Button>
+  );
+};
