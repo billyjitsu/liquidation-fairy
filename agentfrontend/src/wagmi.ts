@@ -1,6 +1,6 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { sepolia } from "wagmi/chains";
-import { defineChain } from "viem";
+import { createPublicClient, defineChain, http } from "viem";
 
 export const sonicTestnet = defineChain({
   id: 57054, // Your custom chain ID
@@ -30,4 +30,9 @@ export const config = getDefaultConfig({
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true" ? [sepolia] : []),
   ],
   ssr: true,
+});
+
+export const publicClient = createPublicClient({
+  chain: sonicTestnet,
+  transport: http(sonicTestnet.rpcUrls.default.http[0]),
 });
