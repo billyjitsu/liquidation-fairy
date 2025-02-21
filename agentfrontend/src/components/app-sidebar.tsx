@@ -10,29 +10,34 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-
-const navMain = [
-  {
-    title: "Setup",
-    url: "/setup",
-    icon: Bot,
-    isActive: true,
-  },
-  {
-    title: "Transfer Tokens",
-    url: "/transfer",
-    icon: Coins,
-    isActive: true,
-  },
-  {
-    title: "Chat",
-    url: "/chat",
-    icon: MessageCircle,
-    isActive: true,
-  },
-];
+import { useRouter } from "next/router";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { pathname } = useRouter();
+
+  console.log(pathname);
+
+  const navMain = [
+    {
+      title: "Setup",
+      url: "/setup",
+      icon: Bot,
+      isActive: pathname === "/setup",
+    },
+    {
+      title: "Transfer Tokens",
+      url: "/transfer",
+      icon: Coins,
+      isActive: pathname === "/transfer",
+    },
+    {
+      title: "Chat",
+      url: "/chat",
+      icon: MessageCircle,
+      isActive: pathname === "/chat",
+    },
+  ];
+
   return (
     <Sidebar variant="floating" collapsible="icon" {...props}>
       <SidebarHeader>
