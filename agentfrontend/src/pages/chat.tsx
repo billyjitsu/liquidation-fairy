@@ -20,7 +20,9 @@ interface ChatMessage {
 
 export default function Chat2Page() {
   const [input, setInput] = useState<string>("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+ 
+  ]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const inputLength = input.trim().length;
