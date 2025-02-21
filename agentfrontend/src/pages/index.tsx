@@ -77,12 +77,14 @@ const Instructions = () => {
             "Enable borrowing capabilities by delegating debt token allowances through your MultiSig. Manage USDC borrowing permissions securely.",
         },
       ],
+      cta: "Setup",
     },
     {
       title: "Transfer Tokens",
       description:
         "Transfer your tokens (API3, USDC) to the MultiSig wallet. This is the first step in allowing the agent to manage your investments.",
       link: "/transfer",
+      cta: "Transfer Tokens",
     },
   ];
 
@@ -106,7 +108,7 @@ const Instructions = () => {
           </CardContent>
           <CardFooter>
             <Button className="w-full !text-white" asChild>
-              <Link href={step.link}>{step.title} →</Link>
+              <Link href={step.cta}>{step.cta} →</Link>
             </Button>
           </CardFooter>
         </Card>
