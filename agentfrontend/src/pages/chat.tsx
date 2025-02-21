@@ -1,17 +1,45 @@
 import React, { useState, useRef, useEffect } from "react";
-import { apiClient } from "../lib/api";
+import { apiClient } from "@/lib/api";
+import { Send } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 interface ChatMessage {
   text: string;
-  user: "user" | "system";
+  role: "user" | "system";
   createdAt: number;
   action?: string; // optional action from agent responses
 }
 
-export default function ChatInterface() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export default function Chat2Page() {
   const [input, setInput] = useState<string>("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      text: "Hi, how can I help you today?",
+      role: "system",
+      createdAt: Date.now(),
+    },
+    {
+      text: "I'm having trouble with my account.",
+      role: "user",
+      createdAt: Date.now(),
+    },
+    {
+      text: "What seems to be the problem?",
+      role: "system",
+      createdAt: Date.now(),
+    },
+  ]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const inputLength = input.trim().length;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -20,7 +48,7 @@ export default function ChatInterface() {
   const handleSendMessage = async () => {
     const userMessage: ChatMessage = {
       text: input,
-      user: "user",
+      role: "user",
       createdAt: Date.now(),
     };
     setMessages((prev) => [...prev, userMessage]);
@@ -37,7 +65,7 @@ export default function ChatInterface() {
         response.forEach((msg: any) => {
           const systemMessage: ChatMessage = {
             text: msg.text || "No reply received",
-            user: "system",
+            role: "system",
             createdAt: Date.now(),
             action: msg.action,
           };
@@ -50,7 +78,7 @@ export default function ChatInterface() {
       } else {
         const systemMessage: ChatMessage = {
           text: response.reply || "No reply received",
-          user: "system",
+          role: "system",
           createdAt: Date.now(),
           action: response.action,
         };
@@ -71,43 +99,50 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8 flex flex-col h-screen bg-gray-50 border border-gray-300 rounded-lg shadow-lg">
-      <div className="flex-1 p-4 overflow-y-auto bg-white">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`mb-3 p-3 rounded-2xl max-w-[80%] break-words ${
-              msg.user === "system"
-                ? "bg-blue-100 self-start"
-                : "bg-green-100 self-end"
-            }`}
-          >
-            <span className="font-bold mr-2">
-              {msg.user === "system" ? "Agent:" : "You:"}
-            </span>
-            <span>{msg.text}</span>
+    <>
+      <Card className="h-full flex flex-col">
+        <CardHeader className="flex flex-row items-center">
+          <div className="flex items-center space-x-4">
+            <div className="text-lg font-bold">Liquidation Fairy Chat</div>
           </div>
-        ))}
-      </div>
-      <form
-        className="flex p-4 border-t border-gray-300 bg-gray-200"
-        onSubmit={handleSubmit}
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Type your message..."
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="ml-3 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-        >
-          Send
-        </button>
-      </form>
-    </div>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-y-auto">
+          <div className="space-y-4">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
+                  message.role === "user"
+                    ? "ml-auto bg-primary text-primary-foreground"
+                    : "bg-muted"
+                )}
+              >
+                {message.text}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <form
+            onSubmit={handleSubmit}
+            className="flex w-full items-center space-x-2"
+          >
+            <Input
+              id="message"
+              placeholder="Type your message..."
+              className="flex-1"
+              autoComplete="off"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+            />
+            <Button type="submit" size="icon" disabled={inputLength === 0}>
+              <Send />
+              <span className="sr-only">Send</span>
+            </Button>
+          </form>
+        </CardFooter>
+      </Card>
+    </>
   );
 }
