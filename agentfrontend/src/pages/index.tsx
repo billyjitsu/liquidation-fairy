@@ -96,10 +96,10 @@ const Instructions = () => {
               {step.description}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 flex-1 flex-grow">
+          <CardContent className="space-y-4 flex-1 flex-grow">
             {step.subSteps?.map((subStep) => (
               <div key={subStep.title}>
-                <h3 className="text-md font-semibold">{subStep.title}</h3>
+                <h3 className="text-lg font-semibold">{subStep.title}</h3>
                 <p className="text-sm text-gray-600">{subStep.description}</p>
               </div>
             ))}
