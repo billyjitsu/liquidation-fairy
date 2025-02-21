@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Bot, Coins } from "lucide-react";
+import { Bot, Coins, MessageCircle } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import {
   Sidebar,
@@ -22,6 +22,12 @@ const navMain = [
     title: "Transfer Tokens",
     url: "/transfer",
     icon: Coins,
+    isActive: true,
+  },
+  {
+    title: "Chat",
+    url: "/chat",
+    icon: MessageCircle,
     isActive: true,
   },
 ];

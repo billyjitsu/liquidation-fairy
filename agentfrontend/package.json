@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@elizaos/core": "^0.25.6-alpha.1",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^4.1.0",
     "@radix-ui/react-accordion": "^1.2.3",
