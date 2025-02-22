@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
+} from "./ui/Card";
 import { useAtom } from "jotai";
 import {
   useAccount,
