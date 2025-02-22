@@ -7,7 +7,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/card";
+} from "./ui/Card";
 import { parseUnits } from "viem";
 import { toast } from "react-hot-toast";
 import { TransactionStatus } from "../components/transaction-status";
