@@ -75,6 +75,7 @@ export default function BorrowCard() {
   } = useForm({
     defaultValues: {
       multisigAddress: multisigAddress,
+      debtTokenAddress: DEBT_TOKENS[0].address,
     },
     resolver: zodResolver(borrowFormSchema),
   });
@@ -173,7 +174,7 @@ export default function BorrowCard() {
           <CardFooter className="flex flex-col gap-2">
             <Button
               type="submit"
-              className="w-full"
+              className="w-full cursor-pointer"
               disabled={isSubmitting || !isValid || isSubmitSuccessful}
             >
               {isSubmitting ? "Submitting..." : "Submit Delegation"}
@@ -248,7 +249,7 @@ const ExecutionButton = ({
         }
 
         setIsExecuting(true);
-        const hash = await executeTransaction({
+        await executeTransaction({
           multisigAddress: multisigAddress,
           userAddress: address as `0x${string}`,
         });

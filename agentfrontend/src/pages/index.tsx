@@ -1,7 +1,6 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import styles from "../styles/Home.module.css";
 import {
   Card,
   CardDescription,
@@ -108,7 +107,7 @@ const Instructions = () => {
           </CardContent>
           <CardFooter>
             <Button className="w-full !text-white" asChild>
-              <Link href={step.cta}>{step.cta} →</Link>
+              <Link href={step.link}>{step.cta} →</Link>
             </Button>
           </CardFooter>
         </Card>
