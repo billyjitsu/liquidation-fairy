@@ -19,6 +19,8 @@ console.log("Environment variables loaded:", {
 const MULTISIG_ABI = [
   "function delegatedTransfer(address _token, address _to, uint256 _amount) public returns (bool)",
   "function getDelegationStatus(address _token, address _delegate) public view returns (uint256 dailyLimit, uint256 spentToday, uint256 remainingToday, uint256 timeUntilReset, uint256 confirmations, bool isActive)",
+  "function getDelegationStatus(address token, address delegatee) external view returns (bool)",
+  "function owner() external view returns (address)"
 ];
 
 const LENDING_POOL_ABI = [
