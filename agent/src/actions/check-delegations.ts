@@ -4,140 +4,199 @@ import { Action, IAgentRuntime, Memory, State } from "@elizaos/core";
 import { ethers } from "ethers";
 
 const DEBT_TOKEN_ABI = [
-    "function borrowAllowance(address fromUser, address toUser) external view returns (uint256)",
-    "function decimals() external view returns (uint8)",
+  "function borrowAllowance(address fromUser, address toUser) external view returns (uint256)",
+  "function decimals() external view returns (uint8)",
 ];
 
 const MULTISIG_ABI = [
-    "function getDelegationStatus(address token, address delegatee) external view returns (bool)",
-    "function owner() external view returns (address)"
+  "function getDelegationStatus(address token, address delegatee) external view returns (bool)",
+  "function owner() external view returns (address)",
 ];
 
 export const checkDelegations: Action = {
-    name: "CHECK_DELEGATIONS",
-    similes: ["VERIFY_SETUP", "CHECK_PERMISSIONS", "VERIFY_DELEGATIONS", "CHECK_ACCESS"],
-    description: "Verify multisig deployment and delegation permissions for the AI agent",
-    examples: [
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "Can you check if all permissions are set up correctly?",
-                },
-            },
-            {
-                user: "Eliza",
-                content: {
-                    text: "I'll verify the multisig setup and delegations",
-                    action: "CHECK_DELEGATIONS",
-                },
-            },
-        ],
+  name: "CHECK_DELEGATIONS",
+  similes: [
+    "VERIFY_SETUP",
+    "CHECK_PERMISSIONS",
+    "VERIFY_DELEGATIONS",
+    "CHECK_ACCESS",
+    "CONFIRM_SETUP",
+    "SETUP_COMPLETE",
+    "DONE_SETUP",
+    "FINISHED_STEPS",
+    "COMPLETED_TASKS",
+  ],
+  description:
+    "Verify multisig deployment and delegation permissions for the AI agent",
+  examples: [
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "Can you check if all permissions are set up correctly?",
+        },
+      },
+      {
+        user: "Eliza",
+        content: {
+          text: "I'll verify the multisig setup and delegations",
+          action: "CHECK_DELEGATIONS",
+        },
+      },
     ],
-    validate: async (agentRuntime: IAgentRuntime, message: Memory, state: State) => {
-        const text = message.content.text.toLowerCase();
-        return text.includes('check') || 
-               text.includes('verify') || 
-               text.includes('permissions') ||
-               text.includes('setup');
-    },
-    handler: async (agentRuntime: IAgentRuntime, message: Memory, state: State) => {
-        console.log("Starting delegation verification checks");
+  ],
+  validate: async (
+    agentRuntime: IAgentRuntime,
+    message: Memory,
+    state: State
+  ) => {
+    const text = message.content.text.toLowerCase();
 
-        const requiredEnvVars = [
-            'AI_AGENT_PRIVATE_KEY',
-            'DEPLOYED_MULTISIG',
-            'COLLATERAL_TOKEN',
-            'DEBT_TOKEN',
-            'VARIABLE_DEBT_TOKEN',
-            'RPC_URL'
-        ];
+    // Keywords that indicate setup completion
+    const setupKeywords = ["done", "completed", "finished", "ready"];
+    const actionKeywords = ["steps", "tasks", "things", "setup", "everything"];
 
-        for (const envVar of requiredEnvVars) {
-            if (!process.env[envVar]) {
-                throw new Error(`Missing required environment variable: ${envVar}`);
-            }
-        }
+    // Check if any setup keyword is combined with an action keyword
+    const hasSetupPhrase = setupKeywords.some((setup) =>
+      actionKeywords.some(
+        (action) => text.includes(setup) && text.includes(action)
+      )
+    );
 
-        try {
-            const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-            const aiWallet = new ethers.Wallet(process.env.AI_AGENT_PRIVATE_KEY, provider);
-            const multisigAddress = process.env.DEPLOYED_MULTISIG;
+    return (
+      text.includes("check") ||
+      text.includes("verify") ||
+      text.includes("permissions") ||
+      text.includes("setup") ||
+      text.includes("did all") ||
+      (text.includes("all") && text.includes("steps")) ||
+      text.includes("everything you asked") ||
+      hasSetupPhrase
+    );
+  },
+  handler: async (
+    agentRuntime: IAgentRuntime,
+    message: Memory,
+    state: State
+  ) => {
+    console.log("Starting delegation verification checks");
 
-            // Check if multisig exists
-            const code = await provider.getCode(multisigAddress);
-            if (code === '0x') {
-                return {
-                    text: "❌ Multisig contract not deployed at specified address",
-                    action: "CHECK_DELEGATIONS_ERROR"
-                };
-            }
+    const requiredEnvVars = [
+      "AI_AGENT_PRIVATE_KEY",
+      "DEPLOYED_MULTISIG",
+      "COLLATERAL_TOKEN",
+      "DEBT_TOKEN",
+      "VARIABLE_DEBT_TOKEN",
+      "RPC_URL",
+    ];
 
-            // Check delegation statuses
-            const multisig = new ethers.Contract(multisigAddress, MULTISIG_ABI, provider);
-            const [collateralStatus, debtStatus] = await Promise.all([
-                multisig.getDelegationStatus(process.env.COLLATERAL_TOKEN, aiWallet.address),
-                multisig.getDelegationStatus(process.env.DEBT_TOKEN, aiWallet.address)
-            ]);
+    for (const envVar of requiredEnvVars) {
+      if (!process.env[envVar]) {
+        throw new Error(`Missing required environment variable: ${envVar}`);
+      }
+    }
 
-            // Check borrow allowance
-            const debtToken = new ethers.Contract(
-                process.env.VARIABLE_DEBT_TOKEN,
-                DEBT_TOKEN_ABI,
-                provider
-            );
-            const borrowAllowance = await debtToken.borrowAllowance(
-                multisigAddress,
-                aiWallet.address
-            );
+    try {
+      const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+      const aiWallet = new ethers.Wallet(
+        process.env.AI_AGENT_PRIVATE_KEY,
+        provider
+      );
+      const multisigAddress = process.env.DEPLOYED_MULTISIG;
+      console.log(
+        "Checking delegations for multisig at address:",
+        multisigAddress
+      );
 
-            // Store verification results in state
-            agentRuntime.composeState(message, {
-                verificationResults: {
-                    multisigDeployed: true,
-                    collateralDelegated: collateralStatus,
-                    debtDelegated: debtStatus,
-                    borrowAllowance: borrowAllowance.toString(),
-                    timestamp: new Date().toISOString()
-                }
-            });
+      // Check if multisig exists
+      const code = await provider.getCode(multisigAddress);
+      if (code === "0x") {
+        return {
+          text: "❌ Multisig contract not deployed at specified address",
+          action: "CHECK_DELEGATIONS_ERROR",
+        };
+      }
 
-            // Generate status report
-            const statusReport = [
-                "📋 Delegation Status Check:",
-                "",
-                `✅ Multisig Contract: Deployed at ${multisigAddress}`,
-                `${collateralStatus ? "✅" : "❌"} Collateral Token Delegation: ${collateralStatus ? "Approved" : "Not Set"}`,
-                `${debtStatus ? "✅" : "❌"} Debt Token Delegation: ${debtStatus ? "Approved" : "Not Set"}`,
-                `${borrowAllowance.gt(0) ? "✅" : "❌"} Borrow Allowance: ${borrowAllowance.toString()}`
-            ].join("\n");
+      // Check delegation statuses
+      const multisig = new ethers.Contract(
+        multisigAddress,
+        MULTISIG_ABI,
+        provider
+      );
+      const [collateralStatus, debtStatus] = await Promise.all([
+        multisig.getDelegationStatus(
+          process.env.COLLATERAL_TOKEN,
+          aiWallet.address
+        ),
+        multisig.getDelegationStatus(process.env.DEBT_TOKEN, aiWallet.address),
+      ]);
 
-            const allApproved = collateralStatus && debtStatus && borrowAllowance.gt(0);
+      // Check borrow allowance
+      const debtToken = new ethers.Contract(
+        process.env.VARIABLE_DEBT_TOKEN,
+        DEBT_TOKEN_ABI,
+        provider
+      );
+      const borrowAllowance = await debtToken.borrowAllowance(
+        multisigAddress,
+        aiWallet.address
+      );
 
-            return {
-                text: `${statusReport}\n\n${allApproved ? 
-                    "✅ All permissions are properly set up!" : 
-                    "❌ Some permissions are missing. Please set up the required delegations."}`,
-                action: "CHECK_DELEGATIONS",
-                metadata: {
-                    multisigAddress,
-                    collateralStatus,
-                    debtStatus,
-                    borrowAllowance: borrowAllowance.toString(),
-                    timestamp: new Date().toISOString()
-                }
-            };
+      // Store verification results in state
+      agentRuntime.composeState(message, {
+        verificationResults: {
+          multisigDeployed: true,
+          collateralDelegated: collateralStatus,
+          debtDelegated: debtStatus,
+          borrowAllowance: borrowAllowance.toString(),
+          timestamp: new Date().toISOString(),
+        },
+      });
 
-        } catch (error) {
-            console.error("Error during delegation checks:", error);
-            return {
-                text: `❌ Error verifying delegations:\n${error.message}`,
-                action: "CHECK_DELEGATIONS_ERROR",
-                metadata: {
-                    error: error.message,
-                    timestamp: new Date().toISOString()
-                }
-            };
-        }
-    },
+      // Generate status report
+      const statusReport = [
+        "📋 Delegation Status Check:",
+        "",
+        `✅ Multisig Contract: Deployed at ${multisigAddress}`,
+        `${collateralStatus ? "✅" : "❌"} Collateral Token Delegation: ${
+          collateralStatus ? "Approved" : "Not Set"
+        }`,
+        `${debtStatus ? "✅" : "❌"} Debt Token Delegation: ${
+          debtStatus ? "Approved" : "Not Set"
+        }`,
+        `${
+          borrowAllowance.gt(0) ? "✅" : "❌"
+        } Borrow Allowance: ${borrowAllowance.toString()}`,
+      ].join("\n");
+
+      const allApproved =
+        collateralStatus && debtStatus && borrowAllowance.gt(0);
+
+      return {
+        text: `${statusReport}\n\n${
+          allApproved
+            ? "✅ All permissions are properly set up!"
+            : "❌ Some permissions are missing. Please set up the required delegations."
+        }`,
+        action: "CHECK_DELEGATIONS",
+        metadata: {
+          multisigAddress,
+          collateralStatus,
+          debtStatus,
+          borrowAllowance: borrowAllowance.toString(),
+          timestamp: new Date().toISOString(),
+        },
+      };
+    } catch (error) {
+      console.error("Error during delegation checks:", error);
+      return {
+        text: `❌ Error verifying delegations:\n${error.message}`,
+        action: "CHECK_DELEGATIONS_ERROR",
+        metadata: {
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+  },
 };

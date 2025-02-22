@@ -35,6 +35,7 @@ import { healthFactorAction } from "./actions/health-factor.ts";
 import { swapTokensOnBehalf } from "./actions/swap-on-behalf.ts";
 import { repayOnBehalf } from "./actions/repay-on-behalf.ts";
 import { transferTokensOnBehalf } from "./actions/send-tokens-to-account.ts";
+import { checkDelegations } from "./actions/check-delegations.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,6 +113,7 @@ export function createAgent(
       swapTokensOnBehalf,
       repayOnBehalf,
       transferTokensOnBehalf,
+      checkDelegations, 
     ],
     services: [],
     managers: [],
@@ -238,8 +240,6 @@ const startAgents = async () => {
       if (healthFactor < CRITICAL_THRESHOLD) {
         // Execute repayment when health factor is critical
         try {
-          
-
           const message = `🚨 CRITICAL ALERT: Health factor was ${healthFactorFixed}. Auto-repayment executed successfully!`;
           if (message) {
             await sendHealthAlert(directClient, message);
@@ -261,16 +261,15 @@ const startAgents = async () => {
             process.env.DEPLOYED_MULTISIG
           );
 
-          const updateMessage = `New health factor after repayment: ${newHealthFactor.toFixed(2)}`;
+          const updateMessage = `New health factor after repayment: ${newHealthFactor.toFixed(
+            2
+          )}`;
           await sendHealthAlert(directClient, updateMessage);
-
         } catch (repayError) {
           const errorMessage = `🚨 CRITICAL: Failed to execute auto-repayment. Health factor: ${healthFactorFixed}. Error: ${repayError.message}`;
           await sendHealthAlert(directClient, errorMessage);
           console.error("Repayment error:", repayError);
         }
-
-       
       } else if (healthFactor < WARNING_THRESHOLD) {
         const message = `⚠️ WARNING: Your health factor is ${healthFactorFixed}. Consider adding collateral or reducing debt.`;
 

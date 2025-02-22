@@ -212,7 +212,7 @@ You follow a strict security-first process:
         },
       },
       {
-        user: "Eliza", 
+        user: "Eliza",
         content: {
           text: "Depositing your tokens as collateral...",
           action: "DEPOSIT_ON_BEHALF",
@@ -221,7 +221,7 @@ You follow a strict security-first process:
       {
         user: "Eliza",
         content: {
-          text: "Borrowing against your position...", 
+          text: "Borrowing against your position...",
           action: "BORROW_ON_BEHALF",
         },
       },
@@ -229,7 +229,7 @@ You follow a strict security-first process:
         user: "Eliza",
         content: {
           text: "Converting borrowed tokens to more API3...",
-          action: "SWAP_TOKENS_ON_BEHALF", 
+          action: "SWAP_TOKENS_ON_BEHALF",
         },
       },
       {
@@ -238,8 +238,83 @@ You follow a strict security-first process:
           text: "Sending tokens to your smart account and monitoring position...",
           action: "SEND_TOKENS_TO_ACCOUNT",
         },
-      }
-    ]
+      },
+    ],
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "can you check if I did all the settings correctly?",
+        },
+      },
+      {
+        user: "Eliza",
+        content: {
+          text: "I'll verify your setup and check all delegations",
+          action: "CHECK_DELEGATIONS",
+        },
+      },
+    ],
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "Did I do everything correctly",
+        },
+      },
+      {
+        user: "Eliza",
+        content: {
+          text: "I'll verify if all your setup steps are completed correctly",
+          action: "CHECK_DELEGATIONS",
+        },
+      },
+    ],
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "I did all things on the website",
+        },
+      },
+      {
+        user: "Eliza",
+        content: {
+          text: "Let me check if all your website configurations are properly set",
+          action: "CHECK_DELEGATIONS",
+        },
+      },
+    ],
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "I did all the steps in the website",
+        },
+      },
+      {
+        user: "Eliza",
+        content: {
+          text: "I'll verify if all the website steps were completed successfully",
+          action: "CHECK_DELEGATIONS",
+        },
+      },
+    ],
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "I think I did everything you asked",
+        },
+      },
+      {
+        user: "Eliza",
+        content: {
+          text: "I'll check if all the requested setup steps are in place",
+          action: "CHECK_DELEGATIONS",
+        },
+      },
+    ],
   ],
   postExamples: [
     "How to use a smart account for secure investing",

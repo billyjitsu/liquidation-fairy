@@ -112,13 +112,13 @@ export default function Chat2Page() {
               <div
                 key={index}
                 className={cn(
-                  "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
+                  "flex w-fit max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm overflow-hidden",
                   message.role === "user"
                     ? "ml-auto bg-primary text-primary-foreground"
                     : "bg-muted"
                 )}
               >
-                {message.text}
+                <div className="overflow-wrap-anywhere">{message.text}</div>
               </div>
             ))}
           </div>
