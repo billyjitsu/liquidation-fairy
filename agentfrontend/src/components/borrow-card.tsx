@@ -5,7 +5,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/Card";
+} from "@/components/ui/card";
 import { parseUnits, encodeFunctionData, TransactionReceipt } from "viem";
 import { MULTISIG_ABI } from "@/ABI/MULTISIG_ABI";
 import { DEBT_TOKEN_ABI } from "@/ABI/DEBT_TOKEN_ABI";
@@ -240,7 +240,7 @@ const ExecutionButton = ({
   return (
     <Button
       type="button"
-      className="w-full"
+      className="w-full cursor-pointer"
       variant="secondary"
       onClick={async () => {
         if (!multisigAddress) {

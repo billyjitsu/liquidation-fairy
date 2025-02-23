@@ -7,7 +7,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/Card";
+} from "@/components/ui/card";
 import { parseUnits } from "viem";
 import { toast } from "react-hot-toast";
 import { TransactionStatus } from "../components/transaction-status";
@@ -44,7 +44,7 @@ const SUPPORTED_TOKENS = [
 
 const transferFormSchema = z.object({
   tokenAddress: z.string(),
-  amount: z.string(),
+  amount: z.string().min(0.01, { message: "Amount must be greater than 0" }),
   multisigAddress: z.string(),
 });
 
@@ -173,7 +173,13 @@ export default function TransferCard() {
             </div>
             <div>
               <Label className="mb-2">Amount</Label>
-              <Input type="number" placeholder="0.0" {...register("amount")} />
+              <Input
+                step={0.1}
+                min={0}
+                type="number"
+                placeholder="0.0"
+                {...register("amount")}
+              />
             </div>
           </CardContent>
           <CardFooter>

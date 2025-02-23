@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/Card";
+} from "@/components/ui/card";
 import { useAtom } from "jotai";
 import {
   useAccount,
@@ -73,11 +73,14 @@ export default function DeployCard() {
           <div className="space-y-4">
             {multisigAddress ? (
               <>
-                <Button onClick={() => setMultisigAddress(undefined)}>
+                <Button
+                  className="w-full cursor-pointer"
+                  onClick={() => setMultisigAddress(undefined)}
+                >
                   Reset Deployed Contract
                 </Button>
 
-                <div className="mt-4 bg-green-50 rounded-lg">
+                <div className="mt-4 p-3 bg-green-50 rounded-lg">
                   <h3 className="font-semibold text-green-800">
                     Successfully Deployed!
                   </h3>

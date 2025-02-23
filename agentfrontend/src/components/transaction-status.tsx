@@ -18,7 +18,7 @@ export const TransactionStatus: React.FC<TransactionStatusProps> = ({
   if (!hash) return null;
 
   return (
-    <Button variant="ghost" asChild>
+    <Button className="cursor-pointer w-full mt-2" variant="ghost" asChild>
       <Link
         href={`https://testnet.sonicscan.org/tx/${hash}`}
         target="_blank"

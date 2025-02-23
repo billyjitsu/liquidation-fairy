@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/Card";
+} from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import {
   useAccount,
@@ -268,21 +268,10 @@ export default function DelegateCard() {
             <Label className="mb-1">Amount</Label>
             <Input type="number" placeholder="0.0" {...register("amount")} />
           </div>
-          {delegationStatus && (
-            <div className="p-4 bg-gray-100 rounded-md">
-              <h3 className="text-lg font-semibold mb-2">Delegation Status</h3>
-              <p>Daily Limit: {formatUnits(delegationStatus[0], decimals)}</p>
-              <p>Spent Today: {formatUnits(delegationStatus[1], decimals)}</p>
-              <p>
-                Remaining Today: {formatUnits(delegationStatus[2], decimals)}
-              </p>
-              <p>Time Until Reset: {delegationStatus[3].toString()} seconds</p>
-            </div>
-          )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-2">
           <Button
-            className="w-full"
+            className="w-full cursor-pointer"
             type="submit"
             disabled={!address || isSubmitting || !isValid}
           >
@@ -293,6 +282,17 @@ export default function DelegateCard() {
             isLoading={isDelegating}
             isSuccess={!!receipt}
           />
+          {delegationStatus && (
+            <div className="p-4 mt-4 bg-gray-100 rounded-md w-full">
+              <h3 className="text-lg font-semibold mb-2">Delegation Status</h3>
+              <p>Daily Limit: {formatUnits(delegationStatus[0], decimals)}</p>
+              <p>Spent Today: {formatUnits(delegationStatus[1], decimals)}</p>
+              <p>
+                Remaining Today: {formatUnits(delegationStatus[2], decimals)}
+              </p>
+              <p>Time Until Reset: {delegationStatus[3].toString()} seconds</p>
+            </div>
+          )}
         </CardFooter>
       </form>
     </Card>
