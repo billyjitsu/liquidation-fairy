@@ -5,7 +5,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/Card";
 import { parseUnits, encodeFunctionData, TransactionReceipt } from "viem";
 import { MULTISIG_ABI } from "@/ABI/MULTISIG_ABI";
 import { DEBT_TOKEN_ABI } from "@/ABI/DEBT_TOKEN_ABI";

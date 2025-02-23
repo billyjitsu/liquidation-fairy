@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
+} from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 
 const Home: NextPage = () => {

@@ -8,7 +8,7 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-} from "@/components/ui/card";
+} from "@/components/ui/Card";
 import { Input } from "@/components/ui/input";
 
 interface ChatMessage {
